@@ -26,6 +26,41 @@ mkdir -p "$A1111_CKPT_DIR" \
 
 UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 
+download_with_resume() {
+  local url="$1"
+  local out_path="$2"
+  local header1="${3:-}"
+  local header2="${4:-}"
+  local tmp_path="${out_path}.downloading"
+
+  if [[ -s "$out_path" ]]; then
+    echo "已存在，跳过: $out_path"
+    return 0
+  fi
+
+  if [[ -f "$tmp_path" ]]; then
+    echo "检测到未完成文件，续传: $tmp_path"
+  else
+    echo "开始下载: $out_path"
+  fi
+
+  if [[ -n "$header1" && -n "$header2" ]]; then
+    curl -fL -C - --retry 20 --retry-delay 5 \
+      -H "$header1" \
+      -H "$header2" \
+      "$url" -o "$tmp_path"
+  elif [[ -n "$header1" ]]; then
+    curl -fL -C - --retry 20 --retry-delay 5 \
+      -H "$header1" \
+      "$url" -o "$tmp_path"
+  else
+    curl -fL -C - --retry 20 --retry-delay 5 \
+      "$url" -o "$tmp_path"
+  fi
+
+  mv "$tmp_path" "$out_path"
+}
+
 resolve_latest_version_from_model_id() {
   local model_id="$1"
   curl -fsSL "https://civitai.com/api/v1/models/${model_id}" | python3 - <<'PY'
@@ -63,39 +98,17 @@ download_civitai_version() {
   fi
 
   local out_path="$out_dir/$file_name"
-  local tmp_path="${out_path}.downloading"
   local url="https://civitai.com/api/download/models/${version_id}?token=${CIVITAI_API_KEY}"
   local referer="https://civitai.com/models/${referer_model_id}?modelVersionId=${version_id}"
 
   echo "下载 Civitai version=$version_id -> $out_path"
-  if [[ -s "$out_path" ]]; then
-    echo "已存在，跳过: $out_path"
-    return 0
-  fi
-
-  if ! wget -c --content-disposition \
-    --header="User-Agent: ${UA}" \
-    --header="Referer: ${referer}" \
-    "$url" -O "$tmp_path"; then
-    echo "wget 失败，curl 重试..."
-    rm -f "$tmp_path"
-    curl -fL --retry 3 --retry-delay 2 \
-      -H "User-Agent: ${UA}" \
-      -H "Referer: ${referer}" \
-      "$url" -o "$tmp_path"
-  fi
-  mv "$tmp_path" "$out_path"
+  download_with_resume "$url" "$out_path" "User-Agent: ${UA}" "Referer: ${referer}"
 }
 
 download_url() {
   local url="$1"
   local out="$2"
-  if [[ -s "$out" ]]; then
-    echo "已存在，跳过: $out"
-    return 0
-  fi
-  echo "下载: $out"
-  wget -c "$url" -O "$out"
+  download_with_resume "$url" "$out"
 }
 
 echo "[1/5] 下载大模型（Civitai versionId=${BASE_MODEL_VERSION_ID}）"
