@@ -1,6 +1,6 @@
 {
-  "last_node_id": 12,
-  "last_link_id": 18,
+  "last_node_id": 13,
+  "last_link_id": 19,
   "nodes": [
     {
       "id": 1,
@@ -499,12 +499,43 @@
         {
           "name": "IMAGE",
           "type": "IMAGE",
-          "links": []
+          "links": [
+            19
+          ]
         }
       ],
       "properties": {
         "Node name for S&R": "VAEDecode"
       }
+    },
+    {
+      "id": 13,
+      "type": "SaveImage",
+      "pos": [
+        1850,
+        220
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 19
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "qwen_faceswap"
+      ]
     }
   ],
   "links": [
@@ -651,6 +682,14 @@
       10,
       1,
       "VAE"
+    ],
+    [
+      19,
+      10,
+      0,
+      13,
+      0,
+      "IMAGE"
     ]
   ],
   "groups": [],
