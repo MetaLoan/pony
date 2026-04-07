@@ -34,7 +34,11 @@ if ! "$PY" -m pip --version >/dev/null 2>&1; then
 fi
 
 echo "[4/7] 安装依赖"
-"$PY" -m pip install -U -r custom_nodes/ComfyUI_IPAdapter_plus/requirements.txt
+if [[ -f "custom_nodes/ComfyUI_IPAdapter_plus/requirements.txt" ]]; then
+  "$PY" -m pip install -U -r custom_nodes/ComfyUI_IPAdapter_plus/requirements.txt
+else
+  echo "未找到 custom_nodes/ComfyUI_IPAdapter_plus/requirements.txt，跳过该文件安装"
+fi
 "$PY" -m pip install -U insightface onnxruntime-gpu || "$PY" -m pip install -U insightface onnxruntime
 
 echo "[5/7] 检查节点类"
