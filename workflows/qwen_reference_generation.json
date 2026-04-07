@@ -1,6 +1,6 @@
 {
-  "last_node_id": 13,
-  "last_link_id": 17,
+  "last_node_id": 15,
+  "last_link_id": 21,
   "nodes": [
     {
       "id": 1,
@@ -88,7 +88,8 @@
             4,
             5,
             6,
-            18
+            18,
+            21
           ]
         }
       ],
@@ -127,11 +128,49 @@
           "links": []
         }
       ],
+      "title": "参考脸 (Image 1)",
       "properties": {
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
         "reference_face.png",
+        "image"
+      ]
+    },
+    {
+      "id": 14,
+      "type": "LoadImage",
+      "pos": [
+        40,
+        770
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            19
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "title": "目标身体 (Image 2, 可选)",
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "target_body.png",
         "image"
       ]
     },
@@ -147,7 +186,7 @@
         80
       ],
       "flags": {},
-      "order": 4,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
@@ -167,6 +206,45 @@
           ]
         }
       ],
+      "title": "Scale 参考脸",
+      "properties": {
+        "Node name for S&R": "FluxKontextImageScale"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 15,
+      "type": "FluxKontextImageScale",
+      "pos": [
+        420,
+        550
+      ],
+      "size": [
+        230,
+        80
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            20,
+            11,
+            12
+          ]
+        }
+      ],
+      "title": "Scale 目标身体",
       "properties": {
         "Node name for S&R": "FluxKontextImageScale"
       },
@@ -177,20 +255,20 @@
       "type": "VAEEncode",
       "pos": [
         420,
-        530
+        670
       ],
       "size": [
         230,
         100
       ],
       "flags": {},
-      "order": 5,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
           "name": "pixels",
           "type": "IMAGE",
-          "link": 8
+          "link": 20
         },
         {
           "name": "vae",
@@ -203,10 +281,11 @@
           "name": "LATENT",
           "type": "LATENT",
           "links": [
-            11
+            13
           ]
         }
       ],
+      "title": "VAEEncode 目标身体",
       "properties": {
         "Node name for S&R": "VAEEncode"
       },
@@ -216,15 +295,15 @@
       "id": 7,
       "type": "TextEncodeQwenImageEditPlus",
       "pos": [
-        700,
+        720,
         60
       ],
       "size": [
-        420,
+        440,
         290
       ],
       "flags": {},
-      "order": 6,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
@@ -240,12 +319,12 @@
         {
           "name": "image1",
           "type": "IMAGE",
-          "link": 9
+          "link": 8
         },
         {
           "name": "image2",
           "type": "IMAGE",
-          "link": null
+          "link": 11
         },
         {
           "name": "image3",
@@ -258,30 +337,31 @@
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
-            12
+            14
           ]
         }
       ],
+      "title": "Positive",
       "properties": {
         "Node name for S&R": "TextEncodeQwenImageEditPlus"
       },
       "widgets_values": [
-        "Using the person in the reference image, generate a high-quality photorealistic portrait of this same person. Preserve their exact facial identity, skin tone, and eye color. Natural lighting, sharp focus."
+        "Replace the face in image2 with the face from image1. Keep the body, pose, clothing, and background of image2 exactly the same. The face identity must match image1 precisely."
       ]
     },
     {
       "id": 8,
       "type": "TextEncodeQwenImageEditPlus",
       "pos": [
-        700,
+        720,
         380
       ],
       "size": [
-        420,
+        440,
         200
       ],
       "flags": {},
-      "order": 7,
+      "order": 9,
       "mode": 0,
       "inputs": [
         {
@@ -297,12 +377,12 @@
         {
           "name": "image1",
           "type": "IMAGE",
-          "link": 10
+          "link": 9
         },
         {
           "name": "image2",
           "type": "IMAGE",
-          "link": null
+          "link": 12
         },
         {
           "name": "image3",
@@ -315,10 +395,11 @@
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
-            13
+            15
           ]
         }
       ],
+      "title": "Negative",
       "properties": {
         "Node name for S&R": "TextEncodeQwenImageEditPlus"
       },
@@ -328,112 +409,118 @@
     },
     {
       "id": 9,
-      "type": "ModelSamplingAuraFlow",
+      "type": "ReferenceLatent",
       "pos": [
-        1180,
-        60
+        720,
+        610
       ],
       "size": [
-        290,
-        110
-      ],
-      "flags": {},
-      "order": 8,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 1
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            14
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ModelSamplingAuraFlow"
-      },
-      "widgets_values": [
-        3
-      ]
-    },
-    {
-      "id": 10,
-      "type": "CFGNorm",
-      "pos": [
-        1180,
-        200
-      ],
-      "size": [
-        290,
-        110
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 14
-        }
-      ],
-      "outputs": [
-        {
-          "name": "patched_model",
-          "type": "MODEL",
-          "links": [
-            15
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "CFGNorm"
-      },
-      "widgets_values": [
-        1
-      ]
-    },
-    {
-      "id": 11,
-      "type": "KSampler",
-      "pos": [
-        1180,
-        340
-      ],
-      "size": [
-        315,
-        262
+        211,
+        46
       ],
       "flags": {},
       "order": 10,
       "mode": 0,
       "inputs": [
         {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 14
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            16
+          ]
+        }
+      ],
+      "title": "Positive + 目标latent",
+      "properties": {
+        "Node name for S&R": "ReferenceLatent"
+      }
+    },
+    {
+      "id": 10,
+      "type": "ReferenceLatent",
+      "pos": [
+        720,
+        680
+      ],
+      "size": [
+        211,
+        46
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 15
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "title": "Negative + 无latent",
+      "properties": {
+        "Node name for S&R": "ReferenceLatent"
+      }
+    },
+    {
+      "id": 11,
+      "type": "KSampler",
+      "pos": [
+        1220,
+        300
+      ],
+      "size": [
+        315,
+        262
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
           "name": "model",
           "type": "MODEL",
-          "link": 15
+          "link": 1
         },
         {
           "name": "positive",
           "type": "CONDITIONING",
-          "link": 12
+          "link": 16
         },
         {
           "name": "negative",
           "type": "CONDITIONING",
-          "link": 13
+          "link": 17
         },
         {
           "name": "latent_image",
           "type": "LATENT",
-          "link": 11
+          "link": 13
         }
       ],
       "outputs": [
@@ -441,7 +528,7 @@
           "name": "LATENT",
           "type": "LATENT",
           "links": [
-            16
+            18
           ]
         }
       ],
@@ -452,9 +539,9 @@
         42,
         "fixed",
         20,
-        4,
-        "euler",
-        "simple",
+        4.0,
+        "euler_ancestral",
+        "beta",
         1.0
       ]
     },
@@ -462,26 +549,26 @@
       "id": 12,
       "type": "VAEDecode",
       "pos": [
-        1560,
-        340
+        1590,
+        300
       ],
       "size": [
         210,
         46
       ],
       "flags": {},
-      "order": 11,
+      "order": 13,
       "mode": 0,
       "inputs": [
         {
           "name": "samples",
           "type": "LATENT",
-          "link": 16
+          "link": 18
         },
         {
           "name": "vae",
           "type": "VAE",
-          "link": 18
+          "link": 21
         }
       ],
       "outputs": [
@@ -489,7 +576,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            17
+            19
           ]
         }
       ],
@@ -501,28 +588,28 @@
       "id": 13,
       "type": "SaveImage",
       "pos": [
-        1820,
-        300
+        1850,
+        280
       ],
       "size": [
         315,
         270
       ],
       "flags": {},
-      "order": 12,
+      "order": 14,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 17
+          "link": 19
         }
       ],
       "properties": {
         "Node name for S&R": "SaveImage"
       },
       "widgets_values": [
-        "qwen_ref_output"
+        "qwen_faceswap_output"
       ]
     }
   ],
@@ -531,7 +618,7 @@
       1,
       1,
       0,
-      9,
+      11,
       0,
       "MODEL"
     ],
@@ -587,68 +674,76 @@
       8,
       5,
       0,
-      6,
-      0,
+      7,
+      2,
       "IMAGE"
     ],
     [
       9,
       5,
       0,
-      7,
-      2,
-      "IMAGE"
-    ],
-    [
-      10,
-      5,
-      0,
       8,
       2,
       "IMAGE"
     ],
     [
       11,
-      6,
+      15,
       0,
-      11,
+      7,
       3,
-      "LATENT"
+      "IMAGE"
     ],
     [
       12,
-      7,
+      15,
       0,
-      11,
-      1,
-      "CONDITIONING"
+      8,
+      3,
+      "IMAGE"
     ],
     [
       13,
-      8,
+      6,
       0,
-      11,
-      2,
-      "CONDITIONING"
+      9,
+      1,
+      "LATENT"
     ],
     [
       14,
+      7,
+      0,
       9,
       0,
-      10,
-      0,
-      "MODEL"
+      "CONDITIONING"
     ],
     [
       15,
+      8,
+      0,
       10,
       0,
-      11,
-      0,
-      "MODEL"
+      "CONDITIONING"
     ],
     [
       16,
+      9,
+      0,
+      11,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      17,
+      10,
+      0,
+      11,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      18,
       11,
       0,
       12,
@@ -656,7 +751,7 @@
       "LATENT"
     ],
     [
-      17,
+      19,
       12,
       0,
       13,
@@ -664,7 +759,15 @@
       "IMAGE"
     ],
     [
-      18,
+      20,
+      15,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      21,
       3,
       0,
       12,
@@ -672,52 +775,11 @@
       "VAE"
     ]
   ],
-  "groups": [
-    {
-      "title": "模型加载",
-      "bounding": [
-        20,
-        40,
-        370,
-        380
-      ],
-      "color": "#3f789e"
-    },
-    {
-      "title": "参考图 + 尺寸缩放",
-      "bounding": [
-        20,
-        400,
-        660,
-        270
-      ],
-      "color": "#8e5288"
-    },
-    {
-      "title": "TextEncodeQwenImageEditPlus (正 / 负)",
-      "bounding": [
-        680,
-        40,
-        460,
-        570
-      ],
-      "color": "#558944"
-    },
-    {
-      "title": "ModelSamplingAuraFlow + CFGNorm + 采样",
-      "bounding": [
-        1160,
-        40,
-        380,
-        590
-      ],
-      "color": "#c38e3a"
-    }
-  ],
+  "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.7,
+      "scale": 0.65,
       "offset": [
         0,
         0
