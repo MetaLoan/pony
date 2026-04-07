@@ -6,45 +6,79 @@
 
 echo "Starting deployment of Qwen Native Face Swap dependencies..."
 
-# Ensure we have comfyui path (defaulting to the RunPod environment used in other scripts)
-COMFY_DIR="${COMFY_DIR:-/workspace/runpod-slim/ComfyUI}"
-
-if [ ! -d "$COMFY_DIR/custom_nodes" ]; then
-    echo "Warning: $COMFY_DIR/custom_nodes not found. Please pass the correct ComfyUI path as an environment variable."
-    echo "Usage: COMFY_DIR=/path/to/ComfyUI ./deploy_qwen_models.sh"
-    exit 1
-fi
-
-# 1. Install 1038lab's ComfyUI-QwenVL Node
-echo ">>> Step 1: Installing ComfyUI-QwenVL custom node..."
-cd "$COMFY_DIR/custom_nodes" || exit 1
-if [ ! -d "ComfyUI-QwenVL" ]; then
-    # Use GIT_CONFIG_GLOBAL=/dev/null to avoid local git config (like `insteadOf`) forcing auth on public repos
-    GIT_CONFIG_GLOBAL=/dev/null git clone https://github.com/1038lab/ComfyUI-QwenVL.git
-    cd ComfyUI-QwenVL
-    pip install -r requirements.txt
-    cd ..
+# ComfyUI root — auto-detect between two known locations
+if [ -d "/ComfyUI/custom_nodes" ]; then
+    COMFY_DIR="/ComfyUI"
+elif [ -d "/workspace/runpod-slim/ComfyUI/custom_nodes" ]; then
+    COMFY_DIR="/workspace/runpod-slim/ComfyUI"
 else
-    echo "ComfyUI-QwenVL already installed, pulling latest..."
-    cd ComfyUI-QwenVL && GIT_CONFIG_GLOBAL=/dev/null git pull && cd ..
+    COMFY_DIR="${COMFY_DIR:-/ComfyUI}"
 fi
+echo ">>> ComfyUI root detected: $COMFY_DIR"
 
-# 2. Download Qwen2.5-VL-7B-Instruct GGUF models
-echo ">>> Step 2: Downloading Qwen2.5-VL-7B-Instruct GGUF models..."
-cd "$COMFY_DIR/models" || exit 1
-
-# Create the specific directory if required by the Kijai node
-mkdir -p LLM/Qwen2.5-VL
-cd LLM/Qwen2.5-VL || exit 1
-
-# Use wget for a bulletproof download that avoids pip matching issues entirely
-echo "Downloading Qwen2.5-VL Q4_K_M GGUF (Low VRAM optimized)... this will take a few minutes."
-if [ ! -f "qwen2.5-vl-7b-instruct-q4_k_m.gguf" ]; then
-    wget -c "https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct-GGUF/resolve/main/qwen2.5-vl-7b-instruct-q4_k_m.gguf?download=true" -O qwen2.5-vl-7b-instruct-q4_k_m.gguf.tmp
-    mv qwen2.5-vl-7b-instruct-q4_k_m.gguf.tmp qwen2.5-vl-7b-instruct-q4_k_m.gguf
+# ---------------------------------------------------------------
+# Step 1: Install / update ComfyUI-QwenVL-Mod (already present on
+#         the OneClick template, but keep it fresh)
+# ---------------------------------------------------------------
+echo ""
+echo ">>> Step 1: Checking ComfyUI-QwenVL-Mod custom node..."
+QWEN_NODE_DIR="$COMFY_DIR/custom_nodes/ComfyUI-QwenVL-Mod"
+if [ -d "$QWEN_NODE_DIR" ]; then
+    echo "ComfyUI-QwenVL-Mod already installed, pulling latest..."
+    cd "$QWEN_NODE_DIR" && GIT_CONFIG_GLOBAL=/dev/null git pull && cd -
 else
-    echo "qwen2.5-vl-7b-instruct-q4_k_m.gguf already exists! Skipping download."
+    echo "Not found — cloning ComfyUI-QwenVL-Mod..."
+    cd "$COMFY_DIR/custom_nodes" || exit 1
+    GIT_CONFIG_GLOBAL=/dev/null git clone https://github.com/huchukato/ComfyUI-QwenVL-Mod.git
+    cd ComfyUI-QwenVL-Mod && pip install -r requirements.txt && cd -
 fi
 
-echo ">>> Deployment completed successfully!"
-echo "Please restart ComfyUI. You can now use the Qwen2-VL nodes."
+# ---------------------------------------------------------------
+# Step 2: Download Qwen2.5-VL-7B model files
+# The QwenVL-Mod node expects:
+#   diffusion_models  -> qwen_image_edit_2511_bf16.safetensors
+#   text_encoders     -> qwen_2.5_vl_7b_fp8_scaled.safetensors
+#   vae               -> qwen_image_vae.safetensors
+# ---------------------------------------------------------------
+echo ""
+echo ">>> Step 2: Downloading Qwen model weight files..."
+
+DIFF_DIR="$COMFY_DIR/models/diffusion_models"
+TEXT_DIR="$COMFY_DIR/models/text_encoders"
+VAE_DIR="$COMFY_DIR/models/vae"
+
+mkdir -p "$DIFF_DIR" "$TEXT_DIR" "$VAE_DIR"
+
+download() {
+    local url="$1"
+    local out="$2"
+    if [ -s "$out" ]; then
+        echo "Already exists, skipping: $out"
+        return 0
+    fi
+    echo "Downloading: $out"
+    wget -c "$url" -O "${out}.tmp" && mv "${out}.tmp" "$out"
+}
+
+# Qwen Image Edit UNet (diffusion model)
+download \
+  "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2511_bf16.safetensors" \
+  "$DIFF_DIR/qwen_image_edit_2511_bf16.safetensors"
+
+# Qwen 2.5 VL 7B Text Encoder (fp8)
+download \
+  "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors" \
+  "$TEXT_DIR/qwen_2.5_vl_7b_fp8_scaled.safetensors"
+
+# Qwen Image VAE
+download \
+  "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors" \
+  "$VAE_DIR/qwen_image_vae.safetensors"
+
+echo ""
+echo ">>> Deployment completed! File sizes:"
+ls -lh "$DIFF_DIR/qwen_image_edit_2511_bf16.safetensors" 2>/dev/null
+ls -lh "$TEXT_DIR/qwen_2.5_vl_7b_fp8_scaled.safetensors" 2>/dev/null
+ls -lh "$VAE_DIR/qwen_image_vae.safetensors" 2>/dev/null
+echo ""
+echo "Please restart ComfyUI to load the new models."
