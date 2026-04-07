@@ -37,14 +37,14 @@ cd "$COMFY_DIR/models" || exit 1
 mkdir -p LLM/Qwen2.5-VL
 cd LLM/Qwen2.5-VL || exit 1
 
-# Check if huggingface-cli is installed, try using python module directly
-if ! python3 -m huggingface_hub.cli env &> /dev/null; then
-    echo "huggingface_hub cli not working, installing..."
-    pip install -U "huggingface_hub[cli]"
+# Use wget for a bulletproof download that avoids pip matching issues entirely
+echo "Downloading Qwen2.5-VL Q4_K_M GGUF (Low VRAM optimized)... this will take a few minutes."
+if [ ! -f "qwen2.5-vl-7b-instruct-q4_k_m.gguf" ]; then
+    wget -c "https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct-GGUF/resolve/main/qwen2.5-vl-7b-instruct-q4_k_m.gguf?download=true" -O qwen2.5-vl-7b-instruct-q4_k_m.gguf.tmp
+    mv qwen2.5-vl-7b-instruct-q4_k_m.gguf.tmp qwen2.5-vl-7b-instruct-q4_k_m.gguf
+else
+    echo "qwen2.5-vl-7b-instruct-q4_k_m.gguf already exists! Skipping download."
 fi
-
-echo "Downloading the Qwen2.5-VL Q4_K_M GGUF (Low VRAM optimized)..."
-python3 -m huggingface_hub.cli download Qwen/Qwen2.5-VL-7B-Instruct-GGUF qwen2.5-vl-7b-instruct-q4_k_m.gguf --local-dir .
 
 echo ">>> Deployment completed successfully!"
 echo "Please restart ComfyUI. You can now use the Qwen2-VL nodes."
