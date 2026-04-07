@@ -15,18 +15,18 @@ if [ ! -d "$COMFY_DIR/custom_nodes" ]; then
     exit 1
 fi
 
-# 1. Install Kijai's ComfyUI-Qwen2-VL Node
-echo ">>> Step 1: Installing ComfyUI-Qwen2-VL custom node..."
+# 1. Install 1038lab's ComfyUI-QwenVL Node
+echo ">>> Step 1: Installing ComfyUI-QwenVL custom node..."
 cd "$COMFY_DIR/custom_nodes" || exit 1
-if [ ! -d "ComfyUI-Qwen2-VL" ]; then
+if [ ! -d "ComfyUI-QwenVL" ]; then
     # Use GIT_CONFIG_GLOBAL=/dev/null to avoid local git config (like `insteadOf`) forcing auth on public repos
-    GIT_CONFIG_GLOBAL=/dev/null git clone https://github.com/kijai/ComfyUI-Qwen2-VL.git
-    cd ComfyUI-Qwen2-VL
+    GIT_CONFIG_GLOBAL=/dev/null git clone https://github.com/1038lab/ComfyUI-QwenVL.git
+    cd ComfyUI-QwenVL
     pip install -r requirements.txt
     cd ..
 else
-    echo "ComfyUI-Qwen2-VL already installed, pulling latest..."
-    cd ComfyUI-Qwen2-VL && GIT_CONFIG_GLOBAL=/dev/null git pull && cd ..
+    echo "ComfyUI-QwenVL already installed, pulling latest..."
+    cd ComfyUI-QwenVL && GIT_CONFIG_GLOBAL=/dev/null git pull && cd ..
 fi
 
 # 2. Download Qwen2.5-VL-7B-Instruct GGUF models
