@@ -2,6 +2,7 @@
 set -euo pipefail
 
 MODEL_VERSION_ID="${MODEL_VERSION_ID:-}"
+MODEL_ID="${MODEL_ID:-82543}"
 OUT_DIR="${OUT_DIR:-/workspace/stable-diffusion-webui/models/Stable-diffusion}"
 
 if [[ -z "$MODEL_VERSION_ID" ]]; then
@@ -17,6 +18,8 @@ fi
 mkdir -p "$OUT_DIR"
 API_URL="https://civitai.com/api/v1/model-versions/${MODEL_VERSION_ID}"
 DOWNLOAD_URL="https://civitai.com/api/download/models/${MODEL_VERSION_ID}?token=${CIVITAI_API_KEY}"
+REFERER_URL="https://civitai.com/models/${MODEL_ID}?modelVersionId=${MODEL_VERSION_ID}"
+UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 
 # 通过 API 取推荐文件名（避免下载成错误名）
 # 若 API 返回异常（空响应/HTML/限流页），自动回退为 modelVersionId.safetensors
@@ -49,7 +52,17 @@ FINAL_PATH="$OUT_DIR/$FILE_NAME"
 echo "下载版本: $MODEL_VERSION_ID"
 echo "目标文件: $FINAL_PATH"
 
-wget -c --content-disposition "$DOWNLOAD_URL" -O "$TMP_PATH"
+if ! wget -c --content-disposition \
+  --header="User-Agent: ${UA}" \
+  --header="Referer: ${REFERER_URL}" \
+  "$DOWNLOAD_URL" -O "$TMP_PATH"; then
+  echo "wget 下载失败，改用 curl 重试..."
+  rm -f "$TMP_PATH"
+  curl -fL --retry 3 --retry-delay 2 \
+    -H "User-Agent: ${UA}" \
+    -H "Referer: ${REFERER_URL}" \
+    "$DOWNLOAD_URL" -o "$TMP_PATH"
+fi
 mv "$TMP_PATH" "$FINAL_PATH"
 
 # 轻量校验 safetensors 头，避免下载到 HTML/报错页
