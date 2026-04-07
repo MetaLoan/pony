@@ -6,18 +6,18 @@
 
 echo "Starting deployment of Qwen Native Face Swap dependencies..."
 
-# Ensure we have comfyui path (assuming this script might be run in the ComfyUI root or passed as argument)
-COMFYUI_DIR=${1:-"./ComfyUI"}
+# Ensure we have comfyui path (defaulting to the RunPod environment used in other scripts)
+COMFY_DIR="${COMFY_DIR:-/workspace/runpod-slim/ComfyUI}"
 
-if [ ! -d "$COMFYUI_DIR/custom_nodes" ]; then
-    echo "Warning: $COMFYUI_DIR/custom_nodes not found. Please pass the correct ComfyUI path as an argument."
-    echo "Usage: ./deploy_qwen_models.sh /path/to/ComfyUI"
+if [ ! -d "$COMFY_DIR/custom_nodes" ]; then
+    echo "Warning: $COMFY_DIR/custom_nodes not found. Please pass the correct ComfyUI path as an environment variable."
+    echo "Usage: COMFY_DIR=/path/to/ComfyUI ./deploy_qwen_models.sh"
     exit 1
 fi
 
 # 1. Install Kijai's ComfyUI-Qwen2-VL Node
 echo ">>> Step 1: Installing ComfyUI-Qwen2-VL custom node..."
-cd "$COMFYUI_DIR/custom_nodes" || exit 1
+cd "$COMFY_DIR/custom_nodes" || exit 1
 if [ ! -d "ComfyUI-Qwen2-VL" ]; then
     git clone https://github.com/kijai/ComfyUI-Qwen2-VL.git
     cd ComfyUI-Qwen2-VL
@@ -28,9 +28,9 @@ else
     cd ComfyUI-Qwen2-VL && git pull && cd ..
 fi
 
-# 2. Download Qwen2.5-VL-7B-Instruct GGUF weights
+# 2. Download Qwen2.5-VL-7B-Instruct GGUF models
 echo ">>> Step 2: Downloading Qwen2.5-VL-7B-Instruct GGUF models..."
-cd "$COMFYUI_DIR/models" || exit 1
+cd "$COMFY_DIR/models" || exit 1
 
 # Create the specific directory if required by the Kijai node
 mkdir -p LLM/Qwen2.5-VL
