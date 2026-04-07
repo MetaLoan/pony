@@ -63,9 +63,12 @@ download_with_resume() {
 
 resolve_latest_version_from_model_id() {
   local model_id="$1"
-  curl -fsSL "https://civitai.com/api/v1/models/${model_id}" | python3 - <<'PY'
+  local jf="/tmp/civitai_model_${model_id}_${RANDOM}.json"
+  curl -fsSL "https://civitai.com/api/v1/models/${model_id}" -o "$jf"
+  python3 - "$jf" <<'PY'
 import json,sys
-obj=json.load(sys.stdin)
+with open(sys.argv[1], "r", encoding="utf-8") as f:
+    obj=json.load(f)
 versions=obj.get('modelVersions') or []
 if not versions:
     raise SystemExit('未找到 modelVersions')
@@ -75,9 +78,12 @@ PY
 
 fetch_filename_by_version() {
   local version_id="$1"
-  curl -fsSL -H "Accept: application/json" "https://civitai.com/api/v1/model-versions/${version_id}" | python3 - <<'PY'
+  local jf="/tmp/civitai_version_${version_id}_${RANDOM}.json"
+  curl -fsSL -H "Accept: application/json" "https://civitai.com/api/v1/model-versions/${version_id}" -o "$jf"
+  python3 - "$jf" <<'PY'
 import json,sys
-obj=json.load(sys.stdin)
+with open(sys.argv[1], "r", encoding="utf-8") as f:
+    obj=json.load(f)
 files=obj.get('files') or []
 if files and files[0].get('name'):
     print(files[0]['name'])
