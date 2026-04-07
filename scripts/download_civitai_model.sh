@@ -19,16 +19,29 @@ API_URL="https://civitai.com/api/v1/model-versions/${MODEL_VERSION_ID}"
 DOWNLOAD_URL="https://civitai.com/api/download/models/${MODEL_VERSION_ID}?token=${CIVITAI_API_KEY}"
 
 # 通过 API 取推荐文件名（避免下载成错误名）
-FILE_NAME="$(curl -fsSL "$API_URL" | python3 - <<'PY'
-import json,sys
-obj=json.load(sys.stdin)
-files=obj.get('files') or []
-if files:
-    print(files[0].get('name') or f"{obj.get('id','model')}.safetensors")
-else:
-    print(f"{obj.get('id','model')}.safetensors")
+# 若 API 返回异常（空响应/HTML/限流页），自动回退为 modelVersionId.safetensors
+META_JSON="/tmp/civitai_model_version_${MODEL_VERSION_ID}.json"
+DEFAULT_FILE_NAME="${MODEL_VERSION_ID}.safetensors"
+if curl -fsSL -H "Accept: application/json" "$API_URL" -o "$META_JSON"; then
+  FILE_NAME="$(python3 - "$META_JSON" "$DEFAULT_FILE_NAME" <<'PY'
+import json, sys
+p = sys.argv[1]
+default = sys.argv[2]
+try:
+    with open(p, "r", encoding="utf-8") as f:
+        obj = json.load(f)
+    files = obj.get("files") or []
+    if files and isinstance(files[0], dict) and files[0].get("name"):
+        print(files[0]["name"])
+    else:
+        print(default)
+except Exception:
+    print(default)
 PY
 )"
+else
+  FILE_NAME="$DEFAULT_FILE_NAME"
+fi
 
 TMP_PATH="$OUT_DIR/${FILE_NAME}.downloading"
 FINAL_PATH="$OUT_DIR/$FILE_NAME"
