@@ -23,15 +23,20 @@ api_url="https://huggingface.co/api/models/${HF_REPO}"
 
 # Pull file list from HF API
 siblings_json="$(curl -fsSL "$api_url")"
+siblings_file="/tmp/hf_siblings_${RANDOM}.json"
+printf '%s' "$siblings_json" > "$siblings_file"
 
 pick_file() {
-  local prefix="$1"
-  local contains="$2"
-  python3 - "$prefix" "$contains" <<'PY'
+  local json_file="$1"
+  local prefix="$2"
+  local contains="$3"
+  python3 - "$json_file" "$prefix" "$contains" <<'PY'
 import json, sys
-prefix=sys.argv[1]
-contains=sys.argv[2]
-obj=json.loads(sys.stdin.read())
+json_file=sys.argv[1]
+prefix=sys.argv[2]
+contains=sys.argv[3]
+with open(json_file, "r", encoding="utf-8") as f:
+    obj=json.load(f)
 files=[x.get('rfilename','') for x in obj.get('siblings',[]) if isinstance(x,dict)]
 # Prefer exact quant matches and non-mmproj main gguf first
 cand=[f for f in files if f.startswith(prefix+'/') and f.endswith('.gguf') and contains in f and 'mmproj' not in f.lower()]
@@ -42,20 +47,23 @@ PY
 }
 
 pick_mmproj() {
-  local prefix="$1"
-  python3 - "$prefix" <<'PY'
+  local json_file="$1"
+  local prefix="$2"
+  python3 - "$json_file" "$prefix" <<'PY'
 import json, sys
-prefix=sys.argv[1]
-obj=json.loads(sys.stdin.read())
+json_file=sys.argv[1]
+prefix=sys.argv[2]
+with open(json_file, "r", encoding="utf-8") as f:
+    obj=json.load(f)
 files=[x.get('rfilename','') for x in obj.get('siblings',[]) if isinstance(x,dict)]
 cand=[f for f in files if f.startswith(prefix+'/') and f.endswith('.gguf') and 'mmproj' in f.lower()]
 print(sorted(cand, key=len)[0] if cand else '')
 PY
 }
 
-MODEL_FILE="$(printf '%s' "$siblings_json" | pick_file "$MODEL_SUBDIR" "$MODEL_QUANT")"
-TEXT_FILE="$(printf '%s' "$siblings_json" | pick_file "$TEXT_REPO_SUBDIR" "$TEXT_QUANT")"
-MMPROJ_FILE="$(printf '%s' "$siblings_json" | pick_mmproj "$TEXT_REPO_SUBDIR")"
+MODEL_FILE="$(pick_file "$siblings_file" "$MODEL_SUBDIR" "$MODEL_QUANT")"
+TEXT_FILE="$(pick_file "$siblings_file" "$TEXT_REPO_SUBDIR" "$TEXT_QUANT")"
+MMPROJ_FILE="$(pick_mmproj "$siblings_file" "$TEXT_REPO_SUBDIR")"
 
 if [[ -z "$MODEL_FILE" ]]; then
   echo "错误: 未找到主模型文件。检查 MODEL_SUBDIR=$MODEL_SUBDIR MODEL_QUANT=$MODEL_QUANT"
