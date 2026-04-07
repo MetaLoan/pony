@@ -88,11 +88,19 @@ download() {
     return 0
   fi
   echo "下载: $out"
-  if [[ -n "$HF_TOKEN" ]]; then
-    wget -c --header="Authorization: Bearer ${HF_TOKEN}" "$url" -O "$out"
-  else
-    wget -c "$url" -O "$out"
+  local tmp="${out}.downloading"
+  if [[ -f "$tmp" ]]; then
+    echo "检测到未完成文件，继续续传: $tmp"
   fi
+  if [[ -n "$HF_TOKEN" ]]; then
+    curl -fL -C - --retry 20 --retry-delay 5 \
+      -H "Authorization: Bearer ${HF_TOKEN}" \
+      "$url" -o "$tmp"
+  else
+    curl -fL -C - --retry 20 --retry-delay 5 \
+      "$url" -o "$tmp"
+  fi
+  mv "$tmp" "$out"
 }
 
 echo "[1/4] 下载主模型 GGUF: $MODEL_FILE"
