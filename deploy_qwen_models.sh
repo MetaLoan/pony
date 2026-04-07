@@ -26,7 +26,7 @@ download() {
         return 0
     fi
     echo "Downloading: $out"
-    wget -L -c "$url" -O "${out}.tmp" && mv "${out}.tmp" "$out"
+    curl -L -C - "$url" -o "${out}.tmp" && mv "${out}.tmp" "$out"
     echo "Done: $(ls -lh "$out" | awk '{print $5, $9}')"
 }
 
