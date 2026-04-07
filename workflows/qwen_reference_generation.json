@@ -175,7 +175,7 @@
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "target_body.png",
+        "reference_face.png",
         "image"
       ]
     },
