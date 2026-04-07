@@ -1,6 +1,6 @@
 {
-  "last_node_id": 15,
-  "last_link_id": 21,
+  "last_node_id": 12,
+  "last_link_id": 18,
   "nodes": [
     {
       "id": 1,
@@ -16,6 +16,7 @@
       "flags": {},
       "order": 0,
       "mode": 0,
+      "inputs": [],
       "outputs": [
         {
           "name": "MODEL",
@@ -47,6 +48,7 @@
       "flags": {},
       "order": 1,
       "mode": 0,
+      "inputs": [],
       "outputs": [
         {
           "name": "CLIP",
@@ -80,6 +82,7 @@
       "flags": {},
       "order": 2,
       "mode": 0,
+      "inputs": [],
       "outputs": [
         {
           "name": "VAE",
@@ -88,8 +91,8 @@
             4,
             5,
             6,
-            18,
-            21
+            17,
+            18
           ]
         }
       ],
@@ -114,6 +117,7 @@
       "flags": {},
       "order": 3,
       "mode": 0,
+      "inputs": [],
       "outputs": [
         {
           "name": "IMAGE",
@@ -138,7 +142,7 @@
       ]
     },
     {
-      "id": 14,
+      "id": 11,
       "type": "LoadImage",
       "pos": [
         40,
@@ -151,12 +155,13 @@
       "flags": {},
       "order": 4,
       "mode": 0,
+      "inputs": [],
       "outputs": [
         {
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            19
+            8
           ]
         },
         {
@@ -165,7 +170,7 @@
           "links": []
         }
       ],
-      "title": "目标身体 (Image 2, 可选)",
+      "title": "目标身体 (Image 2)",
       "properties": {
         "Node name for S&R": "LoadImage"
       },
@@ -200,9 +205,8 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            8,
             9,
-            10
+            11
           ]
         }
       ],
@@ -213,11 +217,11 @@
       "widgets_values": []
     },
     {
-      "id": 15,
+      "id": 12,
       "type": "FluxKontextImageScale",
       "pos": [
         420,
-        550
+        540
       ],
       "size": [
         230,
@@ -230,7 +234,7 @@
         {
           "name": "image",
           "type": "IMAGE",
-          "link": 19
+          "link": 8
         }
       ],
       "outputs": [
@@ -238,9 +242,9 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            20,
-            11,
-            12
+            10,
+            12,
+            13
           ]
         }
       ],
@@ -255,7 +259,7 @@
       "type": "VAEEncode",
       "pos": [
         420,
-        670
+        660
       ],
       "size": [
         230,
@@ -268,7 +272,7 @@
         {
           "name": "pixels",
           "type": "IMAGE",
-          "link": 20
+          "link": 13
         },
         {
           "name": "vae",
@@ -281,7 +285,7 @@
           "name": "LATENT",
           "type": "LATENT",
           "links": [
-            13
+            14
           ]
         }
       ],
@@ -319,12 +323,12 @@
         {
           "name": "image1",
           "type": "IMAGE",
-          "link": 8
+          "link": 9
         },
         {
           "name": "image2",
           "type": "IMAGE",
-          "link": 11
+          "link": 10
         },
         {
           "name": "image3",
@@ -337,7 +341,7 @@
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
-            14
+            15
           ]
         }
       ],
@@ -346,7 +350,7 @@
         "Node name for S&R": "TextEncodeQwenImageEditPlus"
       },
       "widgets_values": [
-        "Replace the face in image2 with the face from image1. Keep the body, pose, clothing, and background of image2 exactly the same. The face identity must match image1 precisely."
+        "Replace the face in image2 with the face from image1. Keep the body, pose, clothing, and background of image2 exactly the same."
       ]
     },
     {
@@ -377,7 +381,7 @@
         {
           "name": "image1",
           "type": "IMAGE",
-          "link": 9
+          "link": 11
         },
         {
           "name": "image2",
@@ -395,7 +399,7 @@
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
-            15
+            16
           ]
         }
       ],
@@ -409,97 +413,17 @@
     },
     {
       "id": 9,
-      "type": "ReferenceLatent",
-      "pos": [
-        720,
-        610
-      ],
-      "size": [
-        211,
-        46
-      ],
-      "flags": {},
-      "order": 10,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "conditioning",
-          "type": "CONDITIONING",
-          "link": 14
-        },
-        {
-          "name": "latent",
-          "type": "LATENT",
-          "link": 13
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            16
-          ]
-        }
-      ],
-      "title": "Positive + 目标latent",
-      "properties": {
-        "Node name for S&R": "ReferenceLatent"
-      }
-    },
-    {
-      "id": 10,
-      "type": "ReferenceLatent",
-      "pos": [
-        720,
-        680
-      ],
-      "size": [
-        211,
-        46
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "conditioning",
-          "type": "CONDITIONING",
-          "link": 15
-        },
-        {
-          "name": "latent",
-          "type": "LATENT",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            17
-          ]
-        }
-      ],
-      "title": "Negative + 无latent",
-      "properties": {
-        "Node name for S&R": "ReferenceLatent"
-      }
-    },
-    {
-      "id": 11,
       "type": "KSampler",
       "pos": [
         1220,
-        300
+        240
       ],
       "size": [
         315,
         262
       ],
       "flags": {},
-      "order": 12,
+      "order": 10,
       "mode": 0,
       "inputs": [
         {
@@ -510,17 +434,17 @@
         {
           "name": "positive",
           "type": "CONDITIONING",
-          "link": 16
+          "link": 15
         },
         {
           "name": "negative",
           "type": "CONDITIONING",
-          "link": 17
+          "link": 16
         },
         {
           "name": "latent_image",
           "type": "LATENT",
-          "link": 13
+          "link": 14
         }
       ],
       "outputs": [
@@ -528,7 +452,7 @@
           "name": "LATENT",
           "type": "LATENT",
           "links": [
-            18
+            17
           ]
         }
       ],
@@ -540,77 +464,47 @@
         "fixed",
         20,
         4.0,
-        "euler_ancestral",
-        "beta",
+        "euler",
+        "simple",
         1.0
       ]
     },
     {
-      "id": 12,
+      "id": 10,
       "type": "VAEDecode",
       "pos": [
         1590,
-        300
+        240
       ],
       "size": [
         210,
         46
       ],
       "flags": {},
-      "order": 13,
+      "order": 11,
       "mode": 0,
       "inputs": [
         {
           "name": "samples",
           "type": "LATENT",
-          "link": 18
+          "link": 17
         },
         {
           "name": "vae",
           "type": "VAE",
-          "link": 21
+          "link": 18
         }
       ],
       "outputs": [
         {
           "name": "IMAGE",
           "type": "IMAGE",
-          "links": [
-            19
-          ]
+          "links": []
         }
       ],
       "properties": {
         "Node name for S&R": "VAEDecode"
       }
-    },
-    {
-      "id": 13,
-      "type": "SaveImage",
-      "pos": [
-        1850,
-        280
-      ],
-      "size": [
-        315,
-        270
-      ],
-      "flags": {},
-      "order": 14,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 19
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "SaveImage"
-      },
-      "widgets_values": [
-        "qwen_faceswap_output"
-      ]
     }
   ],
   "links": [
@@ -618,7 +512,7 @@
       1,
       1,
       0,
-      11,
+      9,
       0,
       "MODEL"
     ],
@@ -672,6 +566,14 @@
     ],
     [
       8,
+      11,
+      0,
+      12,
+      0,
+      "IMAGE"
+    ],
+    [
+      9,
       5,
       0,
       7,
@@ -679,7 +581,15 @@
       "IMAGE"
     ],
     [
-      9,
+      10,
+      12,
+      0,
+      7,
+      3,
+      "IMAGE"
+    ],
+    [
+      11,
       5,
       0,
       8,
@@ -687,16 +597,8 @@
       "IMAGE"
     ],
     [
-      11,
-      15,
-      0,
-      7,
-      3,
-      "IMAGE"
-    ],
-    [
       12,
-      15,
+      12,
       0,
       8,
       3,
@@ -704,73 +606,49 @@
     ],
     [
       13,
+      12,
+      0,
       6,
       0,
-      9,
-      1,
-      "LATENT"
+      "IMAGE"
     ],
     [
       14,
-      7,
+      6,
       0,
       9,
-      0,
-      "CONDITIONING"
+      3,
+      "LATENT"
     ],
     [
       15,
-      8,
+      7,
       0,
-      10,
-      0,
+      9,
+      1,
       "CONDITIONING"
     ],
     [
       16,
+      8,
+      0,
       9,
-      0,
-      11,
-      1,
-      "CONDITIONING"
-    ],
-    [
-      17,
-      10,
-      0,
-      11,
       2,
       "CONDITIONING"
     ],
     [
-      18,
-      11,
+      17,
+      9,
       0,
-      12,
+      10,
       0,
       "LATENT"
     ],
     [
-      19,
-      12,
-      0,
-      13,
-      0,
-      "IMAGE"
-    ],
-    [
-      20,
-      15,
-      0,
-      6,
-      0,
-      "IMAGE"
-    ],
-    [
-      21,
+      18,
       3,
       0,
-      12,
+      10,
       1,
       "VAE"
     ]
