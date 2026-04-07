@@ -1,145 +1,197 @@
 {
-  "last_node_id": 11,
-  "last_link_id": 12,
+  "last_node_id": 13,
+  "last_link_id": 17,
   "nodes": [
     {
       "id": 1,
       "type": "UNETLoader",
-      "pos": [40, 80],
-      "size": {"0": 315, "1": 98},
+      "pos": [40, 60],
+      "size": [315, 98],
       "flags": {}, "order": 0, "mode": 0,
       "outputs": [{"name": "MODEL", "type": "MODEL", "links": [1]}],
-      "properties": {},
+      "properties": {"Node name for S&R": "UNETLoader"},
       "widgets_values": ["qwen_image_edit_2511_bf16.safetensors", "default"]
     },
     {
       "id": 2,
       "type": "CLIPLoader",
-      "pos": [40, 210],
-      "size": {"0": 315, "1": 98},
+      "pos": [40, 190],
+      "size": [315, 110],
       "flags": {}, "order": 1, "mode": 0,
       "outputs": [{"name": "CLIP", "type": "CLIP", "links": [2, 3]}],
-      "properties": {},
-      "widgets_values": ["qwen_2.5_vl_7b_fp8_scaled.safetensors", "qwen_image"]
+      "properties": {"Node name for S&R": "CLIPLoader"},
+      "widgets_values": ["qwen_2.5_vl_7b_fp8_scaled.safetensors", "qwen_image", "default"]
     },
     {
       "id": 3,
       "type": "VAELoader",
-      "pos": [40, 340],
-      "size": {"0": 315, "1": 58},
+      "pos": [40, 330],
+      "size": [315, 58],
       "flags": {}, "order": 2, "mode": 0,
-      "outputs": [{"name": "VAE", "type": "VAE", "links": [4, 7]}],
-      "properties": {},
+      "outputs": [{"name": "VAE", "type": "VAE", "links": [4, 5, 6]}],
+      "properties": {"Node name for S&R": "VAELoader"},
       "widgets_values": ["qwen_image_vae.safetensors"]
     },
     {
       "id": 4,
       "type": "LoadImage",
-      "pos": [40, 430],
-      "size": {"0": 315, "1": 314},
+      "pos": [40, 420],
+      "size": [315, 314],
       "flags": {}, "order": 3, "mode": 0,
       "outputs": [
-        {"name": "IMAGE", "type": "IMAGE", "links": [8]},
+        {"name": "IMAGE", "type": "IMAGE", "links": [7]},
         {"name": "MASK", "type": "MASK", "links": []}
       ],
-      "properties": {},
+      "properties": {"Node name for S&R": "LoadImage"},
       "widgets_values": ["reference_face.png", "image"]
     },
     {
-      "id": 11,
-      "type": "VAEEncode",
-      "pos": [40, 770],
-      "size": {"0": 315, "1": 66},
-      "flags": {}, "order": 4, "mode": 0,
-      "inputs": [
-        {"name": "pixels", "type": "IMAGE", "link": 8},
-        {"name": "vae", "type": "VAE", "link": 7}
-      ],
-      "outputs": [{"name": "LATENT", "type": "LATENT", "links": [11]}],
-      "properties": {}
-    },
-    {
       "id": 5,
-      "type": "CLIPTextEncode",
-      "pos": [420, 80],
-      "size": {"0": 422, "1": 164},
-      "flags": {}, "order": 5, "mode": 0,
-      "inputs": [{"name": "clip", "type": "CLIP", "link": 2}],
-      "outputs": [{"name": "CONDITIONING", "type": "CONDITIONING", "links": [5]}],
-      "properties": {},
-      "widgets_values": ["Using the person in the reference image, generate a high-quality photorealistic portrait. Keep the exact same facial identity, skin tone, and facial features. Natural lighting, sharp focus."]
+      "type": "FluxKontextImageScale",
+      "pos": [420, 420],
+      "size": [230, 80],
+      "flags": {}, "order": 4, "mode": 0,
+      "inputs": [{"name": "image", "type": "IMAGE", "link": 7}],
+      "outputs": [{"name": "IMAGE", "type": "IMAGE", "links": [8, 9, 10]}],
+      "properties": {"Node name for S&R": "FluxKontextImageScale"},
+      "widgets_values": []
     },
     {
       "id": 6,
-      "type": "CLIPTextEncode",
-      "pos": [420, 280],
-      "size": {"0": 422, "1": 120},
+      "type": "VAEEncode",
+      "pos": [420, 530],
+      "size": [230, 100],
+      "flags": {}, "order": 5, "mode": 0,
+      "inputs": [
+        {"name": "pixels", "type": "IMAGE", "link": 8},
+        {"name": "vae", "type": "VAE", "link": 4}
+      ],
+      "outputs": [{"name": "LATENT", "type": "LATENT", "links": [11]}],
+      "properties": {"Node name for S&R": "VAEEncode"},
+      "widgets_values": []
+    },
+    {
+      "id": 7,
+      "type": "TextEncodeQwenImageEditPlus",
+      "pos": [700, 60],
+      "size": [420, 290],
       "flags": {}, "order": 6, "mode": 0,
-      "inputs": [{"name": "clip", "type": "CLIP", "link": 3}],
-      "outputs": [{"name": "CONDITIONING", "type": "CONDITIONING", "links": [6]}],
-      "properties": {},
-      "widgets_values": ["blurry, bad anatomy, watermark, deformed, ugly, worst quality"]
+      "inputs": [
+        {"name": "clip", "type": "CLIP", "link": 2},
+        {"name": "vae", "type": "VAE", "link": 5},
+        {"name": "image1", "type": "IMAGE", "link": 9},
+        {"name": "image2", "type": "IMAGE", "link": null},
+        {"name": "image3", "type": "IMAGE", "link": null}
+      ],
+      "outputs": [{"name": "CONDITIONING", "type": "CONDITIONING", "links": [12]}],
+      "properties": {"Node name for S&R": "TextEncodeQwenImageEditPlus"},
+      "widgets_values": ["Using the person in the reference image, generate a high-quality photorealistic portrait of this same person. Preserve their exact facial identity, skin tone, and eye color. Natural lighting, sharp focus."]
     },
     {
       "id": 8,
-      "type": "KSampler",
-      "pos": [920, 280],
-      "size": {"0": 315, "1": 262},
+      "type": "TextEncodeQwenImageEditPlus",
+      "pos": [700, 380],
+      "size": [420, 200],
       "flags": {}, "order": 7, "mode": 0,
       "inputs": [
-        {"name": "model", "type": "MODEL", "link": 1},
-        {"name": "positive", "type": "CONDITIONING", "link": 5},
-        {"name": "negative", "type": "CONDITIONING", "link": 6},
-        {"name": "latent_image", "type": "LATENT", "link": 11}
+        {"name": "clip", "type": "CLIP", "link": 3},
+        {"name": "vae", "type": "VAE", "link": 6},
+        {"name": "image1", "type": "IMAGE", "link": 10},
+        {"name": "image2", "type": "IMAGE", "link": null},
+        {"name": "image3", "type": "IMAGE", "link": null}
       ],
-      "outputs": [{"name": "LATENT", "type": "LATENT", "links": [12]}],
-      "properties": {},
-      "widgets_values": [42, "fixed", 30, 1.0, "euler", "simple", 0.85]
+      "outputs": [{"name": "CONDITIONING", "type": "CONDITIONING", "links": [13]}],
+      "properties": {"Node name for S&R": "TextEncodeQwenImageEditPlus"},
+      "widgets_values": [""]
     },
     {
       "id": 9,
-      "type": "VAEDecode",
-      "pos": [1300, 280],
-      "size": {"0": 210, "1": 46},
+      "type": "ModelSamplingAuraFlow",
+      "pos": [1180, 60],
+      "size": [290, 110],
       "flags": {}, "order": 8, "mode": 0,
-      "inputs": [
-        {"name": "samples", "type": "LATENT", "link": 12},
-        {"name": "vae", "type": "VAE", "link": 4}
-      ],
-      "outputs": [{"name": "IMAGE", "type": "IMAGE", "links": [13]}],
-      "properties": {}
+      "inputs": [{"name": "model", "type": "MODEL", "link": 1}],
+      "outputs": [{"name": "MODEL", "type": "MODEL", "links": [14]}],
+      "properties": {"Node name for S&R": "ModelSamplingAuraFlow"},
+      "widgets_values": [3]
     },
     {
       "id": 10,
-      "type": "SaveImage",
-      "pos": [1560, 280],
-      "size": {"0": 315, "1": 270},
+      "type": "CFGNorm",
+      "pos": [1180, 200],
+      "size": [290, 110],
       "flags": {}, "order": 9, "mode": 0,
-      "inputs": [{"name": "images", "type": "IMAGE", "link": 13}],
-      "properties": {},
+      "inputs": [{"name": "model", "type": "MODEL", "link": 14}],
+      "outputs": [{"name": "patched_model", "type": "MODEL", "links": [15]}],
+      "properties": {"Node name for S&R": "CFGNorm"},
+      "widgets_values": [1]
+    },
+    {
+      "id": 11,
+      "type": "KSampler",
+      "pos": [1180, 340],
+      "size": [315, 262],
+      "flags": {}, "order": 10, "mode": 0,
+      "inputs": [
+        {"name": "model", "type": "MODEL", "link": 15},
+        {"name": "positive", "type": "CONDITIONING", "link": 12},
+        {"name": "negative", "type": "CONDITIONING", "link": 13},
+        {"name": "latent_image", "type": "LATENT", "link": 11}
+      ],
+      "outputs": [{"name": "LATENT", "type": "LATENT", "links": [16]}],
+      "properties": {"Node name for S&R": "KSampler"},
+      "widgets_values": [42, "fixed", 20, 4, "euler", "simple", 1.0]
+    },
+    {
+      "id": 12,
+      "type": "VAEDecode",
+      "pos": [1560, 340],
+      "size": [210, 46],
+      "flags": {}, "order": 11, "mode": 0,
+      "inputs": [
+        {"name": "samples", "type": "LATENT", "link": 16},
+        {"name": "vae", "type": "VAE", "link": null}
+      ],
+      "outputs": [{"name": "IMAGE", "type": "IMAGE", "links": [17]}],
+      "properties": {"Node name for S&R": "VAEDecode"}
+    },
+    {
+      "id": 13,
+      "type": "SaveImage",
+      "pos": [1820, 300],
+      "size": [315, 270],
+      "flags": {}, "order": 12, "mode": 0,
+      "inputs": [{"name": "images", "type": "IMAGE", "link": 17}],
+      "properties": {"Node name for S&R": "SaveImage"},
       "widgets_values": ["qwen_ref_output"]
     }
   ],
   "links": [
-    [1,  1, 0,  8, 0, "MODEL"],
-    [2,  2, 0,  5, 0, "CLIP"],
-    [3,  2, 0,  6, 0, "CLIP"],
-    [4,  3, 0,  9, 1, "VAE"],
-    [5,  5, 0,  8, 1, "CONDITIONING"],
-    [6,  6, 0,  8, 2, "CONDITIONING"],
-    [7,  3, 0, 11, 1, "VAE"],
-    [8,  4, 0, 11, 0, "IMAGE"],
-    [11, 11, 0, 8, 3, "LATENT"],
-    [12, 8, 0,  9, 0, "LATENT"],
-    [13, 9, 0, 10, 0, "IMAGE"]
+    [1,  1, 0,  9, 0, "MODEL"],
+    [2,  2, 0,  7, 0, "CLIP"],
+    [3,  2, 0,  8, 0, "CLIP"],
+    [4,  3, 0,  6, 1, "VAE"],
+    [5,  3, 0,  7, 1, "VAE"],
+    [6,  3, 0,  8, 1, "VAE"],
+    [7,  4, 0,  5, 0, "IMAGE"],
+    [8,  5, 0,  6, 0, "IMAGE"],
+    [9,  5, 0,  7, 2, "IMAGE"],
+    [10, 5, 0,  8, 2, "IMAGE"],
+    [11, 6, 0, 11, 3, "LATENT"],
+    [12, 7, 0, 11, 1, "CONDITIONING"],
+    [13, 8, 0, 11, 2, "CONDITIONING"],
+    [14, 9, 0, 10, 0, "MODEL"],
+    [15, 10, 0, 11, 0, "MODEL"],
+    [16, 11, 0, 12, 0, "LATENT"],
+    [17, 12, 0, 13, 0, "IMAGE"]
   ],
   "groups": [
-    {"title": "模型加载", "bounding": [20, 60, 360, 360], "color": "#3f789e"},
-    {"title": "参考图 → VAEEncode", "bounding": [20, 420, 360, 440], "color": "#8e5288"},
-    {"title": "Prompt", "bounding": [400, 60, 460, 360], "color": "#558944"},
-    {"title": "采样 & 输出 (CFG=1.0, FLUX)", "bounding": [900, 240, 1000, 340], "color": "#c38e3a"}
+    {"title": "模型加载", "bounding": [20, 40, 370, 380], "color": "#3f789e"},
+    {"title": "参考图 + 尺寸缩放", "bounding": [20, 400, 660, 270], "color": "#8e5288"},
+    {"title": "TextEncodeQwenImageEditPlus (正 / 负)", "bounding": [680, 40, 460, 570], "color": "#558944"},
+    {"title": "ModelSamplingAuraFlow + CFGNorm + 采样", "bounding": [1160, 40, 380, 590], "color": "#c38e3a"}
   ],
   "config": {},
-  "extra": {"ds": {"scale": 0.75, "offset": [0, 0]}},
+  "extra": {"ds": {"scale": 0.7, "offset": [0, 0]}},
   "version": 0.4
 }
