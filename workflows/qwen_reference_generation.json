@@ -24,7 +24,7 @@
       "mode": 0,
       "outputs": [{"name": "CLIP", "type": "CLIP", "links": [2, 3]}],
       "properties": {"Node name for S&R": "CLIPLoader"},
-      "widgets_values": ["qwen_2.5_vl_7b_fp8_scaled.safetensors", "qwen2_vl"]
+      "widgets_values": ["qwen_2.5_vl_7b_fp8_scaled.safetensors", "qwen_image"]
     },
     {
       "id": 3,
