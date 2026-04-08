@@ -51,8 +51,8 @@ RUN python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(rep
 RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='DIAMONIK7777/antelopev2', local_dir='insightface/models/antelopev2', local_dir_use_symlinks=False)"
 
 # 4. ControlNet & Annotators
-RUN wget -O controlnet/controlnet-depth-sdxl-1.0.safetensors "https://huggingface.co/diffusers/controlnet-depth-sdxl-1.0/resolve/main/diffusion_pytorch_model.safetensors" && \
-    wget -O controlnet/controlnet-openpose-sdxl-1.0.safetensors "https://huggingface.co/thibaud/controlnet-openpose-sdxl-1.0/resolve/main/OpenPoseXL2.safetensors"
+RUN wget -L -O controlnet/controlnet-depth-sdxl-1.0.safetensors "https://huggingface.co/diffusers/controlnet-depth-sdxl-1.0/resolve/main/diffusion_pytorch_model.safetensors" && \
+    wget -L -O controlnet/controlnet-openpose-sdxl-1.0.safetensors "https://huggingface.co/thibaud/controlnet-openpose-sdxl-1.0/resolve/main/OpenPoseXL2.safetensors"
 
 RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='yzd-v/DWPose', local_dir='../custom_nodes/comfyui_controlnet_aux/ckpts/yzd-v/DWPose', local_dir_use_symlinks=False)"
 
@@ -60,7 +60,7 @@ RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download
 RUN curl -L "https://civitai.com/api/download/models/160240?token=${CIVITAI_TOKEN}" -o loras/NSFW_POV_AllInOne.safetensors
 
 # 6. Upscaler
-RUN mkdir -p upscale_models && wget -O upscale_models/4x-UltraSharp.pth "https://huggingface.co/lokCX/4x-Ultrasharp/resolve/main/4x-UltraSharp.pth"
+RUN mkdir -p upscale_models && wget -L -O upscale_models/4x-UltraSharp.pth "https://huggingface.co/lokCX/4x-Ultrasharp/resolve/main/4x-UltraSharp.pth"
 
 # Install Serverless dependencies
 WORKDIR /
