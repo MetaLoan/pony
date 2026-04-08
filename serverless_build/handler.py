@@ -3,6 +3,7 @@ import json
 import base64
 import urllib.request
 import urllib.parse
+import urllib.error
 import time
 import os
 import subprocess
@@ -49,8 +50,13 @@ def queue_prompt(prompt):
     p = {"prompt": prompt}
     data = json.dumps(p).encode('utf-8')
     req = urllib.request.Request(f"http://{COMFY_HOST}/prompt", data=data)
-    with urllib.request.urlopen(req) as response:
-        return json.loads(response.read())
+    try:
+        with urllib.request.urlopen(req) as response:
+            return json.loads(response.read())
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode('utf-8')
+        print(f"❌ ComfyUI Rejected Prompt (400): {error_body}")
+        raise Exception(f"ComfyUI_Error: {error_body}")
 
 def get_image(filename, subfolder, folder_type):
     data = {"filename": filename, "subfolder": subfolder, "type": folder_type}
@@ -169,42 +175,44 @@ def handler(job):
     if "2" in prompt: prompt["2"]["inputs"]["clip"] = last_clip
     if "3" in prompt: prompt["3"]["inputs"]["clip"] = last_clip
     
-    # ======= 参数映射 =======
+    # ======= 参数映射 (带严格类型保护) =======
     # 正负文本 (2, 3)
-    if "prompt" in job_input and "2" in prompt: prompt["2"]["inputs"]["text"] = job_input["prompt"]
-    if "negative_prompt" in job_input and "3" in prompt: prompt["3"]["inputs"]["text"] = job_input["negative_prompt"]
+    if "prompt" in job_input and "2" in prompt: 
+        prompt["2"]["inputs"]["text"] = str(job_input["prompt"])
+    if "negative_prompt" in job_input and "3" in prompt: 
+        prompt["3"]["inputs"]["text"] = str(job_input["negative_prompt"])
     
     # Base 一阶段 (Node 22)
     if "22" in prompt:
-        prompt["22"]["inputs"]["steps"] = job_input.get("base_steps", prompt["22"]["inputs"].get("steps", 8))
-        prompt["22"]["inputs"]["seed"] = job_input.get("base_seed", prompt["22"]["inputs"].get("seed", 967549018325766))
-        prompt["22"]["inputs"]["sampler_name"] = job_input.get("base_sampler_name", prompt["22"]["inputs"].get("sampler_name", "dpmpp_2m_sde"))
-        prompt["22"]["inputs"]["scheduler"] = job_input.get("base_scheduler", prompt["22"]["inputs"].get("scheduler", "karras"))
+        prompt["22"]["inputs"]["steps"] = int(job_input.get("base_steps", 8))
+        prompt["22"]["inputs"]["seed"] = int(job_input.get("base_seed", 967549018325766))
+        prompt["22"]["inputs"]["sampler_name"] = str(job_input.get("base_sampler_name", "dpmpp_2m_sde"))
+        prompt["22"]["inputs"]["scheduler"] = str(job_input.get("base_scheduler", "karras"))
         
     # Main 二阶段 (Node 14)
     if "14" in prompt:
-        prompt["14"]["inputs"]["steps"] = job_input.get("steps", prompt["14"]["inputs"].get("steps", 50))
-        prompt["14"]["inputs"]["cfg"] = job_input.get("cfg", prompt["14"]["inputs"].get("cfg", 4.0))
-        prompt["14"]["inputs"]["seed"] = job_input.get("seed", prompt["14"]["inputs"].get("seed", 387730445953839))
-        prompt["14"]["inputs"]["sampler_name"] = job_input.get("sampler_name", prompt["14"]["inputs"].get("sampler_name", "dpmpp_2m_sde"))
-        prompt["14"]["inputs"]["scheduler"] = job_input.get("scheduler", prompt["14"]["inputs"].get("scheduler", "karras"))
+        prompt["14"]["inputs"]["steps"] = int(job_input.get("steps", 50))
+        prompt["14"]["inputs"]["cfg"] = float(job_input.get("cfg", 4.0))
+        prompt["14"]["inputs"]["seed"] = int(job_input.get("seed", 387730445953839))
+        prompt["14"]["inputs"]["sampler_name"] = str(job_input.get("sampler_name", "dpmpp_2m_sde"))
+        prompt["14"]["inputs"]["scheduler"] = str(job_input.get("scheduler", "karras"))
     
     # 骨骼网控制强度 (Node 12: Depth, Node 26: OpenPose)
     if "12" in prompt:
-        prompt["12"]["inputs"]["strength"] = job_input.get("cn_depth_strength", prompt["12"]["inputs"].get("strength", 0.6))
+        prompt["12"]["inputs"]["strength"] = float(job_input.get("cn_depth_strength", 0.6))
     if "26" in prompt:
-        prompt["26"]["inputs"]["strength"] = job_input.get("cn_pose_strength", prompt["26"]["inputs"].get("strength", 0.6))
+        prompt["26"]["inputs"]["strength"] = float(job_input.get("cn_pose_strength", 0.6))
     
     # Empty Latent Image (Node 13) - 分辨率控制
     if "13" in prompt:
-        prompt["13"]["inputs"]["width"] = job_input.get("width", prompt["13"]["inputs"].get("width", 832))
-        prompt["13"]["inputs"]["height"] = job_input.get("height", prompt["13"]["inputs"].get("height", 1216))
+        prompt["13"]["inputs"]["width"] = int(job_input.get("width", 832))
+        prompt["13"]["inputs"]["height"] = int(job_input.get("height", 1216))
         
     # PuLID (Node 8)
     if "8" in prompt:
-        prompt["8"]["inputs"]["weight"] = job_input.get("pulid_weight", prompt["8"]["inputs"].get("weight", 0.8))
-        prompt["8"]["inputs"]["end_at"] = job_input.get("pulid_end_at", prompt["8"]["inputs"].get("end_at", 1.0))
-        prompt["8"]["inputs"]["method"] = job_input.get("pulid_method", prompt["8"]["inputs"].get("method", "fidelity"))
+        prompt["8"]["inputs"]["weight"] = float(job_input.get("pulid_weight", 0.8))
+        prompt["8"]["inputs"]["end_at"] = float(job_input.get("pulid_end_at", 1.0))
+        prompt["8"]["inputs"]["method"] = str(job_input.get("pulid_method", "fidelity"))
         
     # 执行
     try:
