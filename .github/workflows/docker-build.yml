@@ -39,5 +39,5 @@ jobs:
           context: ./serverless_build
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/runpod-pulid-serverless:v16.${{ github.run_number }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/runpod-pulid-serverless-v${{ github.run_number }}:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/runpod-pulid-serverless:latest
