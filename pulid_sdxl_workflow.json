@@ -133,7 +133,7 @@
         {"name": "MODEL", "type": "MODEL", "links": [11], "slot_index": 0}
       ],
       "properties": {"Node name for S&R": "ApplyPulid"},
-      "widgets_values": [0.85, 0.0, 1.0, "fidelity", 6.0]
+      "widgets_values": ["fidelity", 0.85, 0.0, 1.0]
     },
     {
       "id": 9,
