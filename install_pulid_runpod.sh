@@ -71,14 +71,14 @@ mkdir -p "$COMFYUI_PATH/models/clip"
 PULID_MODEL="$COMFYUI_PATH/models/pulid/ip-adapter_pulid_sdxl_fp16.safetensors"
 if [ ! -f "$PULID_MODEL" ]; then
     echo "下载 PuLID 模型..."
-    python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='ToTheBeginning/PuLID', filename='ip-adapter_pulid_sdxl_fp16.safetensors', local_dir='${COMFYUI_PATH}/models/pulid')"
+    python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='huchenlei/ipadapter_pulid', filename='ip-adapter_pulid_sdxl_fp16.safetensors', local_dir='${COMFYUI_PATH}/models/pulid')"
 fi
 
 # 下载 EVA-CLIP
 EVA_CLIP="$COMFYUI_PATH/models/clip/EVA02_CLIP_L_336_psz14_s6B.pt"
 if [ ! -f "$EVA_CLIP" ]; then
     echo "下载 EVA-CLIP..."
-    python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='ToTheBeginning/PuLID', filename='EVA02_CLIP_L_336_psz14_s6B.pt', local_dir='${COMFYUI_PATH}/models/clip')"
+    python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='QuanSun/EVA-CLIP', filename='EVA02_CLIP_L_336_psz14_s6B.pt', local_dir='${COMFYUI_PATH}/models/clip')"
 fi
 
 # Insightface 模型准备 - 让系统在第一次运行时自动下载 buffalo_l 到 ~/.insightface
