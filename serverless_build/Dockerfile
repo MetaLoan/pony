@@ -18,6 +18,10 @@ WORKDIR /workspace
 RUN git clone https://github.com/comfyanonymous/ComfyUI.git 
 WORKDIR /workspace/ComfyUI
 
+# Upgrade PyTorch to 2.4+ (required by newest ComfyUI `comfy_kitchen`) and block NumPy 2.0 crashes
+RUN pip install --no-cache-dir "numpy<2.0.0" && \
+    pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 --upgrade
+
 # Install ComfyUI dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
