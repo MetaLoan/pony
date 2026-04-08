@@ -9,6 +9,22 @@ import os
 COMFY_HOST = "127.0.0.1:8188"
 JSON_WORKFLOW_FILE = "/sd-2xctrlnet-facefusion-api.json"
 
+def wait_for_comfyui(timeout=180):
+    """冷启动保险：在 ComfyUI 服务就绪之前阻塞，最多等 timeout 秒"""
+    print("⏳ 等待 ComfyUI 启动就绪...")
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            req = urllib.request.Request(f"http://{COMFY_HOST}/system_stats")
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                if resp.status == 200:
+                    print(f"✅ ComfyUI 已就绪（等待了 {round(time.time()-start, 1)} 秒）")
+                    return True
+        except Exception:
+            pass
+        time.sleep(2)
+    raise RuntimeError("❌ ComfyUI 在超时时间内没有启动！")
+
 def get_base_workflow():
     with open(JSON_WORKFLOW_FILE, "r") as f:
         return json.load(f)
@@ -40,6 +56,7 @@ def save_b64_image(b64_str, temp_filename):
     return temp_filename
 
 def handler(job):
+    wait_for_comfyui()   # 🔒 冷启动保险，确保 ComfyUI 内核已完全就绪
     job_input = job.get('input', {})
     
     # 动态参数映射表
