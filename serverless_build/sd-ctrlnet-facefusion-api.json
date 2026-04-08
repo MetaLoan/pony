@@ -1,0 +1,233 @@
+{
+  "1": {
+    "inputs": {
+      "ckpt_name": "SDXL_NSFW.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Checkpoint加载器（简易）"
+    }
+  },
+  "2": {
+    "inputs": {
+      "text": "masterpiece, best quality, ultra detailed, 8k raw photo, photorealistic,\n1girl, beautiful young woman, long hair, seductive expression, heavy blush, ahegao,\nnude, large breasts, slim waist, wide hips, perfect ass,\nanal sex, penis in anus, anal penetration, doggystyle, \ndetailed anus, stretched anus, veiny erect penis, balls deep,\nsweat, saliva, drooling, pussy juice dripping, \nhands gripping sheets, arched back, moaning face, eye contact,\nbedroom setting, soft volumetric lighting, depth of field",
+      "clip": [
+        "17",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP文本编码"
+    }
+  },
+  "3": {
+    "inputs": {
+      "text": "ugly, deformed, noisy, blurry, distorted, disfigured, bad anatomy, extra limbs, duplicate, mutilated, watermark, signature, text, low quality, worst quality，(low quality, worst quality:1.4), blurry, deformed, bad anatomy, extra limbs, mutated hands, poorly drawn face, bad hands, text, watermark，watermark, censored, bar, mosaic",
+      "clip": [
+        "17",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP文本编码"
+    }
+  },
+  "4": {
+    "inputs": {
+      "pulid_file": "ip-adapter_pulid_sdxl_fp16.safetensors"
+    },
+    "class_type": "PulidModelLoader",
+    "_meta": {
+      "title": "Load PuLID Model"
+    }
+  },
+  "5": {
+    "inputs": {},
+    "class_type": "PulidEvaClipLoader",
+    "_meta": {
+      "title": "Load Eva Clip (PuLID)"
+    }
+  },
+  "6": {
+    "inputs": {
+      "provider": "CUDA"
+    },
+    "class_type": "PulidInsightFaceLoader",
+    "_meta": {
+      "title": "Load InsightFace (PuLID)"
+    }
+  },
+  "7": {
+    "inputs": {
+      "image": "1224a9f7321c16c6180c087da28975ae.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "8": {
+    "inputs": {
+      "method": "fidelity",
+      "weight": 0.85,
+      "start_at": 0,
+      "end_at": 1,
+      "model": [
+        "17",
+        0
+      ],
+      "pulid": [
+        "4",
+        0
+      ],
+      "eva_clip": [
+        "5",
+        0
+      ],
+      "face_analysis": [
+        "6",
+        0
+      ],
+      "image": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "ApplyPulid",
+    "_meta": {
+      "title": "Apply PuLID"
+    }
+  },
+  "9": {
+    "inputs": {
+      "image": "pose_reference.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "10": {
+    "inputs": {
+      "ckpt_name": "depth_anything_vitl14.pth",
+      "resolution": 512,
+      "image": [
+        "9",
+        0
+      ]
+    },
+    "class_type": "DepthAnythingPreprocessor",
+    "_meta": {
+      "title": "Depth Anything"
+    }
+  },
+  "11": {
+    "inputs": {
+      "control_net_name": "controlnet-depth-sdxl-1.0.safetensors"
+    },
+    "class_type": "ControlNetLoader",
+    "_meta": {
+      "title": "加载ControlNet模型"
+    }
+  },
+  "13": {
+    "inputs": {
+      "width": 832,
+      "height": 1216,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "空Latent图像"
+    }
+  },
+  "14": {
+    "inputs": {
+      "seed": 29057304110533,
+      "steps": 30,
+      "cfg": 4,
+      "sampler_name": "dpmpp_2m_sde",
+      "scheduler": "karras",
+      "denoise": 1,
+      "model": [
+        "8",
+        0
+      ],
+      "positive": [
+        "2",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "latent_image": [
+        "13",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "K采样器"
+    }
+  },
+  "15": {
+    "inputs": {
+      "samples": [
+        "14",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "16": {
+    "inputs": {
+      "filename_prefix": "PuLID_SDXL",
+      "images": [
+        "15",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "保存图像"
+    }
+  },
+  "17": {
+    "inputs": {
+      "lora_name": "NSFW_POV_AllInOne.safetensors",
+      "strength_model": 0.9,
+      "strength_clip": 0.9,
+      "model": [
+        "1",
+        0
+      ],
+      "clip": [
+        "1",
+        1
+      ]
+    },
+    "class_type": "LoraLoader",
+    "_meta": {
+      "title": "加载LoRA"
+    }
+  },
+  "18": {
+    "inputs": {
+      "model_name": "4x-UltraSharp.pth"
+    },
+    "class_type": "UpscaleModelLoader",
+    "_meta": {
+      "title": "加载放大模型"
+    }
+  }
+}
