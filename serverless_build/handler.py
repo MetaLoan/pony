@@ -5,9 +5,25 @@ import urllib.request
 import urllib.parse
 import time
 import os
+import subprocess
 
 COMFY_HOST = "127.0.0.1:8188"
 JSON_WORKFLOW_FILE = "/sd-2xctrlnet-facefusion-api.json"
+
+def start_comfyui():
+    """点火：在后台启动真正的 ComfyUI 引擎"""
+    print("🚀 正在后台启动 ComfyUI 核心进程...")
+    # 我们将 stdout/stderr 写入文件以便调试，避免阻塞主进程
+    log_out = open("/workspace/comfy_stdout.log", "w")
+    log_err = open("/workspace/comfy_stderr.log", "w")
+    
+    cmd = [
+        "python3", "/workspace/ComfyUI/main.py",
+        "--listen", "127.0.0.1",
+        "--port", "8188",
+        "--disable-auto-launch"
+    ]
+    subprocess.Popen(cmd, stdout=log_out, stderr=log_err)
 
 def wait_for_comfyui(timeout=180):
     """冷启动保险：在 ComfyUI 服务就绪之前阻塞，最多等 timeout 秒"""
@@ -217,5 +233,9 @@ def handler(job):
         
     except Exception as e:
         return {"error": str(e)}
+
+# ================= 启动点 =================
+# 在启动 RunPod 监听之前，先点火 ComfyUI
+start_comfyui()
 
 runpod.serverless.start({"handler": handler})
