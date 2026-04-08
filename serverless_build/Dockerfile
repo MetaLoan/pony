@@ -52,7 +52,7 @@ RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download
 
 # 4. ControlNet & Annotators
 RUN wget -O controlnet/controlnet-depth-sdxl-1.0.safetensors "https://huggingface.co/diffusers/controlnet-depth-sdxl-1.0/resolve/main/diffusion_pytorch_model.safetensors" && \
-    wget -O controlnet/controlnet-openpose-sdxl-1.0.safetensors "https://huggingface.co/thibaud/controlnet-openpose-sdxl-1.0/resolve/main/controlnet-openpose-sdxl-1.0.safetensors"
+    wget -O controlnet/controlnet-openpose-sdxl-1.0.safetensors "https://huggingface.co/thibaud/controlnet-openpose-sdxl-1.0/resolve/main/OpenPoseXL2.safetensors"
 
 RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='yzd-v/DWPose', local_dir='../custom_nodes/comfyui_controlnet_aux/ckpts/yzd-v/DWPose', local_dir_use_symlinks=False)"
 
