@@ -31,8 +31,8 @@ RUN pip install --no-cache-dir insightface huggingface_hub onnxruntime-gpu
 RUN pip install --no-cache-dir -r comfyui_controlnet_aux/requirements.txt
 
 # Download Models (Baking into Docker!)
-# Here we use Civitai Token provided by the user for NSFW models.
-ENV CIVITAI_TOKEN="fd0f3beec0b56c19715e0161cca7505c"
+# 1. SDXL Checkpoint
+ARG CIVITAI_TOKEN="fd0f3beec0b56c19715e0161cca7505c"
 
 WORKDIR /workspace/ComfyUI/models
 

@@ -1,7 +1,7 @@
 {
   "1": {
     "inputs": {
-      "ckpt_name": "SDXL_NSFW.safetensors"
+      "ckpt_name": "SDXL_Photorealistic_Mix_nsfw.safetensors"
     },
     "class_type": "CheckpointLoaderSimple",
     "_meta": {
@@ -10,9 +10,9 @@
   },
   "2": {
     "inputs": {
-      "text": "masterpiece, best quality, ultra detailed, 8k raw photo, photorealistic,\n1girl, beautiful young woman, long hair, seductive expression, heavy blush, ahegao,\nnude, large breasts, slim waist, wide hips, perfect ass,\nanal sex, penis in anus, anal penetration, doggystyle, \ndetailed anus, stretched anus, veiny erect penis, balls deep,\nsweat, saliva, drooling, pussy juice dripping, \nhands gripping sheets, arched back, moaning face, eye contact,\nbedroom setting, soft volumetric lighting, depth of field",
+      "text": "POV, shower sex, incredibly attractive young Japanese woman, 18 year old, asian traits, perfect body, perfect firm perky breasts with pink nipples, getting fucked by a man's large erect penis, in a white tiled shower, steam everywhere, eye contact, ultra sexy, wet skin, dark wet hair, wet skin",
       "clip": [
-        "17",
+        "1",
         1
       ]
     },
@@ -23,9 +23,9 @@
   },
   "3": {
     "inputs": {
-      "text": "ugly, deformed, noisy, blurry, distorted, disfigured, bad anatomy, extra limbs, duplicate, mutilated, watermark, signature, text, low quality, worst quality，(low quality, worst quality:1.4), blurry, deformed, bad anatomy, extra limbs, mutated hands, poorly drawn face, bad hands, text, watermark，watermark, censored, bar, mosaic",
+      "text": "ugly, deformed, noisy, blurry, distorted, disfigured, bad anatomy, extra limbs, duplicate, mutilated, watermark, signature, text, low quality, worst quality，(low quality, worst quality:1.4), blurry, deformed, bad anatomy, extra limbs, mutated hands, poorly drawn face, bad hands, text, watermark，watermark, censored, bar, mosaic，blur face\n(bad anatomy:1.2), (poorly drawn hands:1.2), (extra fingers:1.3), (mutated hands:1.2), (deformed:1.1), blurry, lowres, watermark",
       "clip": [
-        "17",
+        "1",
         1
       ]
     },
@@ -61,7 +61,7 @@
   },
   "7": {
     "inputs": {
-      "image": "1224a9f7321c16c6180c087da28975ae.jpg"
+      "image": "480f4bb6e98720bcdf71267edd16598cfd5ac8f697ee6-P6Kyur_fw658.jpg"
     },
     "class_type": "LoadImage",
     "_meta": {
@@ -73,9 +73,9 @@
       "method": "fidelity",
       "weight": 0.85,
       "start_at": 0,
-      "end_at": 1,
+      "end_at": 0.99,
       "model": [
-        "17",
+        "1",
         0
       ],
       "pulid": [
@@ -145,8 +145,8 @@
   },
   "14": {
     "inputs": {
-      "seed": 29057304110533,
-      "steps": 30,
+      "seed": 653511187046267,
+      "steps": 50,
       "cfg": 4,
       "sampler_name": "dpmpp_2m_sde",
       "scheduler": "karras",
@@ -193,32 +193,13 @@
     "inputs": {
       "filename_prefix": "PuLID_SDXL",
       "images": [
-        "15",
+        "19",
         0
       ]
     },
     "class_type": "SaveImage",
     "_meta": {
       "title": "保存图像"
-    }
-  },
-  "17": {
-    "inputs": {
-      "lora_name": "NSFW_POV_AllInOne.safetensors",
-      "strength_model": 0.9,
-      "strength_clip": 0.9,
-      "model": [
-        "1",
-        0
-      ],
-      "clip": [
-        "1",
-        1
-      ]
-    },
-    "class_type": "LoraLoader",
-    "_meta": {
-      "title": "加载LoRA"
     }
   },
   "18": {
@@ -228,6 +209,22 @@
     "class_type": "UpscaleModelLoader",
     "_meta": {
       "title": "加载放大模型"
+    }
+  },
+  "19": {
+    "inputs": {
+      "upscale_model": [
+        "18",
+        0
+      ],
+      "image": [
+        "15",
+        0
+      ]
+    },
+    "class_type": "ImageUpscaleWithModel",
+    "_meta": {
+      "title": "使用模型放大图像"
     }
   }
 }
