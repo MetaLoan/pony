@@ -31,7 +31,7 @@ RUN git clone https://github.com/cubiq/PuLID_ComfyUI.git && \
     git clone https://github.com/Fannovel16/comfyui_controlnet_aux.git
 
 # Install python dependencies for nodes
-RUN pip install --no-cache-dir insightface huggingface_hub onnxruntime-gpu
+RUN pip install --no-cache-dir insightface huggingface_hub onnxruntime-gpu facexlib
 RUN pip install --no-cache-dir -r comfyui_controlnet_aux/requirements.txt
 
 # Download Models (Baking into Docker!)
