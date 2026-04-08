@@ -70,7 +70,7 @@
     },
     {
       "id": 5,
-      "type": "EVACLIPLoader",
+      "type": "PulidEvaClipLoader",
       "pos": [26, 610],
       "size": {"0": 315, "1": 58},
       "flags": {},
@@ -80,23 +80,23 @@
       "outputs": [
         {"name": "EVA_CLIP", "type": "EVA_CLIP", "links": [8], "slot_index": 0}
       ],
-      "properties": {"Node name for S&R": "EVACLIPLoader"},
+      "properties": {"Node name for S&R": "PulidEvaClipLoader"},
       "widgets_values": ["EVA02_CLIP_L_336_psz14_s6B.pt"]
     },
     {
       "id": 6,
-      "type": "FaceAnalysisModels",
+      "type": "PulidInsightFaceLoader",
       "pos": [26, 700],
-      "size": {"0": 315, "1": 82},
+      "size": {"0": 315, "1": 58},
       "flags": {},
       "order": 5,
       "mode": 0,
       "inputs": [],
       "outputs": [
-        {"name": "ANALYSIS_MODELS", "type": "ANALYSIS_MODELS", "links": [9], "slot_index": 0}
+        {"name": "FACEANALYSIS", "type": "FACEANALYSIS", "links": [9], "slot_index": 0}
       ],
-      "properties": {"Node name for S&R": "FaceAnalysisModels"},
-      "widgets_values": ["insightface", "CUDA"]
+      "properties": {"Node name for S&R": "PulidInsightFaceLoader"},
+      "widgets_values": ["CUDA"]
     },
     {
       "id": 7,
@@ -126,7 +126,7 @@
         {"name": "model", "type": "MODEL", "link": 1},
         {"name": "pulid", "type": "PULID", "link": 7},
         {"name": "eva_clip", "type": "EVA_CLIP", "link": 8},
-        {"name": "face_analysis", "type": "ANALYSIS_MODELS", "link": 9},
+        {"name": "face_analysis", "type": "FACEANALYSIS", "link": 9},
         {"name": "image", "type": "IMAGE", "link": 10}
       ],
       "outputs": [
@@ -281,7 +281,7 @@
     [6,  3,  0, 12,  1, "CONDITIONING"],
     [7,  4,  0,  8,  1, "PULID"],
     [8,  5,  0,  8,  2, "EVA_CLIP"],
-    [9,  6,  0,  8,  3, "ANALYSIS_MODELS"],
+    [9,  6,  0,  8,  3, "FACEANALYSIS"],
     [10, 7,  0,  8,  4, "IMAGE"],
     [11, 8,  0, 14,  0, "MODEL"],
     [12, 9,  0, 10,  0, "IMAGE"],
