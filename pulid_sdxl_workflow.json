@@ -1,6 +1,6 @@
 {
-  "last_node_id": 17,
-  "last_link_id": 21,
+  "last_node_id": 19,
+  "last_link_id": 24,
   "nodes": [
     {
       "id": 1,
@@ -525,8 +525,8 @@
         "Node name for S&R": "EmptyLatentImage"
       },
       "widgets_values": [
-        1024,
-        1024,
+        832,
+        1216,
         1
       ]
     },
@@ -633,8 +633,8 @@
       "id": 16,
       "type": "SaveImage",
       "pos": [
-        2050,
-        580
+        2400,
+        600
       ],
       "size": {
         "0": 210,
@@ -647,7 +647,7 @@
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 19
+          "link": 24
         }
       ],
       "outputs": [],
@@ -711,6 +711,78 @@
         0.9,
         0.9
       ]
+    },
+    {
+      "id": 18,
+      "type": "UpscaleModelLoader",
+      "pos": [
+        1780,
+        750
+      ],
+      "size": {
+        "0": 315,
+        "1": 58
+      },
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "UPSCALE_MODEL",
+          "type": "UPSCALE_MODEL",
+          "links": [
+            22
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UpscaleModelLoader"
+      },
+      "widgets_values": [
+        "4x-UltraSharp.pth"
+      ]
+    },
+    {
+      "id": 19,
+      "type": "ImageUpscaleWithModel",
+      "pos": [
+        2050,
+        600
+      ],
+      "size": {
+        "0": 315,
+        "1": 78
+      },
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "upscale_model",
+          "type": "UPSCALE_MODEL",
+          "link": 22
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            24
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageUpscaleWithModel"
+      }
     }
   ],
   "links": [
@@ -862,8 +934,8 @@
       19,
       15,
       0,
-      16,
-      0,
+      19,
+      1,
       "IMAGE"
     ],
     [
@@ -881,6 +953,22 @@
       17,
       1,
       "CLIP"
+    ],
+    [
+      22,
+      18,
+      0,
+      19,
+      0,
+      "UPSCALE_MODEL"
+    ],
+    [
+      24,
+      19,
+      0,
+      16,
+      0,
+      "IMAGE"
     ]
   ],
   "groups": [
