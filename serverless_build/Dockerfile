@@ -51,7 +51,10 @@ RUN python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(rep
 RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='DIAMONIK7777/antelopev2', local_dir='insightface/models/antelopev2', local_dir_use_symlinks=False)"
 
 # 4. ControlNet & Annotators
-RUN wget -O controlnet/controlnet-depth-sdxl-1.0.safetensors "https://huggingface.co/diffusers/controlnet-depth-sdxl-1.0/resolve/main/diffusion_pytorch_model.safetensors"
+RUN wget -O controlnet/controlnet-depth-sdxl-1.0.safetensors "https://huggingface.co/diffusers/controlnet-depth-sdxl-1.0/resolve/main/diffusion_pytorch_model.safetensors" && \
+    wget -O controlnet/controlnet-openpose-sdxl-1.0.safetensors "https://huggingface.co/thibaud/controlnet-openpose-sdxl-1.0/resolve/main/controlnet-openpose-sdxl-1.0.safetensors"
+
+RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='yzd-v/DWPose', local_dir='../custom_nodes/comfyui_controlnet_aux/ckpts/yzd-v/DWPose', local_dir_use_symlinks=False)"
 
 # 5. LoRA
 RUN curl -L "https://civitai.com/api/download/models/160240?token=${CIVITAI_TOKEN}" -o loras/NSFW_POV_AllInOne.safetensors
@@ -66,7 +69,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy handler and the workflow JSON
 COPY handler.py /handler.py
-COPY sd-ctrlnet-facefusion-api.json /sd-ctrlnet-facefusion-api.json
+COPY sd-2xctrlnet-facefusion-api.json /sd-2xctrlnet-facefusion-api.json
 
 # Start the RunPod serverless handler
 CMD ["python3", "-u", "/handler.py"]
