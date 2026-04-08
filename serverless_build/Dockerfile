@@ -36,8 +36,8 @@ ARG CIVITAI_TOKEN="fd0f3beec0b56c19715e0161cca7505c"
 
 WORKDIR /workspace/ComfyUI/models
 
-# 1. SDXL Checkpoint
-RUN curl -L "https://civitai.com/api/download/models/2757323?token=${CIVITAI_TOKEN}" -o checkpoints/SDXL_NSFW.safetensors
+# 1. SDXL Checkpoints
+RUN curl -L "https://civitai.com/api/download/models/544282?token=${CIVITAI_TOKEN}" -o checkpoints/SDXL_Photorealistic_Mix_nsfw.safetensors
 
 # 2. PuLID Models
 RUN python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='huchenlei/ipadapter_pulid', filename='ip-adapter_pulid_sdxl_fp16.safetensors', local_dir='pulid')" && \
