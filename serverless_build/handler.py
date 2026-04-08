@@ -7,6 +7,8 @@ import urllib.error
 import time
 import os
 import subprocess
+import io
+from PIL import Image
 
 COMFY_HOST = "127.0.0.1:8188"
 JSON_WORKFLOW_FILE = "/sd-2xctrlnet-facefusion-api.json"
@@ -237,11 +239,16 @@ def handler(job):
                 for image in node_output['images']:
                     try:
                         image_data = get_image(image['filename'], image['subfolder'], image['type'])
-                        b64_img = base64.b64encode(image_data).decode('utf-8')
+                        # 用 PIL 压缩为 JPEG 避免 RunPod payload 超限
+                        pil_img = Image.open(io.BytesIO(image_data)).convert("RGB")
+                        buf = io.BytesIO()
+                        pil_img.save(buf, format="JPEG", quality=85, optimize=True)
+                        buf.seek(0)
+                        b64_img = base64.b64encode(buf.read()).decode('utf-8')
                         output_images.append(b64_img)
-                        print(f"[DEBUG] 节点 {node_id} 图片读取成功，大小: {len(image_data)/1024:.1f} KB")
+                        print(f"[DEBUG] 节点 {node_id} 压缩后大小: {buf.tell()/1024:.1f} KB")
                     except Exception as img_err:
-                        print(f"[DEBUG] 节点 {node_id} 图片读取失败: {img_err}")
+                        print(f"[DEBUG] 节点 {node_id} 图片处理失败: {img_err}")
             else:
                 print(f"[DEBUG] 节点 {node_id} 无图片输出")
                 

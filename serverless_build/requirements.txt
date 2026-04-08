@@ -2,3 +2,4 @@ runpod
 requests
 websocket-client
 aiohttp
+Pillow

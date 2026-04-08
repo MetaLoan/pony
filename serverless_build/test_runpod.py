@@ -57,20 +57,33 @@ print(f"✅ 任务下发成功! 任务ID: {job_id}\n")
 
 print("3. 后台大模型开始运转（正在进行冷启动或队列运算），正在监听状态...")
 start_time = time.time()
+output_url = f"https://api.runpod.ai/v2/{ENDPOINT_ID}/output/{job_id}"
+
 while True:
     try:
-        poll_resp = requests.get(status_url, headers=headers, timeout=120)
+        poll_resp = requests.get(status_url, headers=headers, timeout=30)
         poll_data = poll_resp.json()
         status = poll_data.get("status", "UNKNOWN")
         
         print(f"   [状态获取] 当前任务进度: {status}...")
         
         if status == "COMPLETED":
-            # 大图传输专项重试：最多尝试 10 次
+            # 分开拉取 output（RunPod 对大 payload 推荐用 /output 端点）
+            print("   [取图] 正在从 output 端点拉取结果...")
             for attempt in range(10):
                 try:
-                    output = poll_data.get("output") or {}
-                    img_list = output.get("images", [])
+                    out_resp = requests.get(output_url, headers=headers, timeout=180)
+                    out_data = out_resp.json()
+                    print(f"   [取图] output 响应 keys: {list(out_data.keys()) if isinstance(out_data, dict) else type(out_data)}")
+                    
+                    # 兼容两种响应格式
+                    if isinstance(out_data, dict):
+                        img_list = out_data.get("images") or (out_data.get("output") or {}).get("images", [])
+                    elif isinstance(out_data, list):
+                        img_list = out_data
+                    else:
+                        img_list = []
+                    
                     if img_list:
                         with open("v1_output_result.jpg", "wb") as f:
                             f.write(base64.b64decode(img_list[0]))
@@ -79,13 +92,10 @@ while True:
                         print(f"高清大图已经保存为 v1_output_result.jpg！")
                         break
                     else:
-                        # output 字段为空，重新拉一次
-                        print(f"   [大图重试 {attempt+1}/10] 图片字段为空，重新请求...")
+                        print(f"   [大图重试 {attempt+1}/10] 图片字段为空，原始响应: {str(out_data)[:300]}")
                         time.sleep(3)
-                        poll_resp = requests.get(status_url, headers=headers, timeout=180)
-                        poll_data = poll_resp.json()
                 except Exception as e:
-                    print(f"   [大图重试 {attempt+1}/10] 获取失败: {e}，3秒后重试...")
+                    print(f"   [大图重试 {attempt+1}/10] 获取失败: {e}")
                     time.sleep(3)
             else:
                 print("❌ 大图获取失败，已超过最大重试次数。")
@@ -99,4 +109,5 @@ while True:
     except Exception as e:
         print(f"   网络波动，5秒后重试: {e}")
         time.sleep(5)
+
 
