@@ -152,6 +152,11 @@ def handler(job):
         prompt["14"]["inputs"]["cfg"] = job_input.get("cfg", prompt["14"]["inputs"].get("cfg", 4))
         prompt["14"]["inputs"]["seed"] = job_input.get("seed", prompt["14"]["inputs"].get("seed", 387730445953839))
     
+    # Empty Latent Image (Node 13) - 分辨率控制
+    if "13" in prompt:
+        prompt["13"]["inputs"]["width"] = job_input.get("width", prompt["13"]["inputs"].get("width", 832))
+        prompt["13"]["inputs"]["height"] = job_input.get("height", prompt["13"]["inputs"].get("height", 1216))
+        
     # PuLID (Node 8)
     if "8" in prompt:
         prompt["8"]["inputs"]["weight"] = job_input.get("pulid_weight", prompt["8"]["inputs"].get("weight", 0.8))
