@@ -39,5 +39,3 @@ jobs:
           context: ./serverless_build
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/runpod-pulid-serverless:v1
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/runpod-pulid-serverless:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/runpod-pulid-serverless:buildcache,mode=max
