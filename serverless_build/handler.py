@@ -145,12 +145,22 @@ def handler(job):
     if "22" in prompt:
         prompt["22"]["inputs"]["steps"] = job_input.get("base_steps", prompt["22"]["inputs"].get("steps", 8))
         prompt["22"]["inputs"]["seed"] = job_input.get("base_seed", prompt["22"]["inputs"].get("seed", 967549018325766))
+        prompt["22"]["inputs"]["sampler_name"] = job_input.get("base_sampler_name", prompt["22"]["inputs"].get("sampler_name", "dpmpp_2m_sde"))
+        prompt["22"]["inputs"]["scheduler"] = job_input.get("base_scheduler", prompt["22"]["inputs"].get("scheduler", "karras"))
         
     # Main 二阶段 (Node 14)
     if "14" in prompt:
         prompt["14"]["inputs"]["steps"] = job_input.get("steps", prompt["14"]["inputs"].get("steps", 50))
-        prompt["14"]["inputs"]["cfg"] = job_input.get("cfg", prompt["14"]["inputs"].get("cfg", 4))
+        prompt["14"]["inputs"]["cfg"] = job_input.get("cfg", prompt["14"]["inputs"].get("cfg", 4.0))
         prompt["14"]["inputs"]["seed"] = job_input.get("seed", prompt["14"]["inputs"].get("seed", 387730445953839))
+        prompt["14"]["inputs"]["sampler_name"] = job_input.get("sampler_name", prompt["14"]["inputs"].get("sampler_name", "dpmpp_2m_sde"))
+        prompt["14"]["inputs"]["scheduler"] = job_input.get("scheduler", prompt["14"]["inputs"].get("scheduler", "karras"))
+    
+    # 骨骼网控制强度 (Node 12: Depth, Node 26: OpenPose)
+    if "12" in prompt:
+        prompt["12"]["inputs"]["strength"] = job_input.get("cn_depth_strength", prompt["12"]["inputs"].get("strength", 0.6))
+    if "26" in prompt:
+        prompt["26"]["inputs"]["strength"] = job_input.get("cn_pose_strength", prompt["26"]["inputs"].get("strength", 0.6))
     
     # Empty Latent Image (Node 13) - 分辨率控制
     if "13" in prompt:
@@ -161,6 +171,7 @@ def handler(job):
     if "8" in prompt:
         prompt["8"]["inputs"]["weight"] = job_input.get("pulid_weight", prompt["8"]["inputs"].get("weight", 0.8))
         prompt["8"]["inputs"]["end_at"] = job_input.get("pulid_end_at", prompt["8"]["inputs"].get("end_at", 1.0))
+        prompt["8"]["inputs"]["method"] = job_input.get("pulid_method", prompt["8"]["inputs"].get("method", "fidelity"))
         
     # 执行
     try:
