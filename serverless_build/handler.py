@@ -93,19 +93,48 @@ def handler(job):
         if "19" in prompt: del prompt["19"]
         if "16" in prompt: prompt["16"]["inputs"]["images"] = ["15", 0]
         
-    # ======= LoRA 控制 =======
-    if not use_lora:
-        # 跳过 Lora，直接连底膜
-        if "22" in prompt: prompt["22"]["inputs"]["model"] = ["1", 0]
-        if "8" in prompt: prompt["8"]["inputs"]["model"] = ["1", 0]
-        if "2" in prompt: prompt["2"]["inputs"]["clip"] = ["1", 1]
-        if "3" in prompt: prompt["3"]["inputs"]["clip"] = ["1", 1]
-        if "20" in prompt: del prompt["20"]
-    else:
-        if "20" in prompt:
-            prompt["20"]["inputs"]["lora_name"] = job_input.get("lora_name", prompt["20"]["inputs"].get("lora_name", "NSFW_POV_AllInOne.safetensors"))
-            prompt["20"]["inputs"]["strength_model"] = job_input.get("lora_strength", 1.0)
-            prompt["20"]["inputs"]["strength_clip"] = job_input.get("lora_strength", 1.0)
+    # ======= 动态多重 LoRA 链 =======
+    loras = job_input.get("loras")
+    
+    # 兼容老版本参数
+    if loras is None:
+        if use_lora:
+            legacy_name = job_input.get("lora_name", "NSFW_POV_AllInOne.safetensors")
+            if "20" in prompt and "lora_name" in prompt["20"]["inputs"]:
+                legacy_name = job_input.get("lora_name", prompt["20"]["inputs"]["lora_name"])
+            loras = [{"name": legacy_name, "strength": job_input.get("lora_strength", 1.0)}]
+        else:
+            loras = []
+            
+    # 摧毁预设的单体 Node 20
+    if "20" in prompt:
+        del prompt["20"]
+        
+    last_model = ["1", 0]
+    last_clip = ["1", 1]
+    
+    # 动态组装无限长度的 LoRA 节点链
+    for idx, lora_info in enumerate(loras):
+        node_id = f"20{idx}"
+        prompt[node_id] = {
+            "inputs": {
+                "lora_name": lora_info["name"],
+                "strength_model": lora_info.get("strength", 1.0),
+                "strength_clip": lora_info.get("strength", 1.0),
+                "model": last_model,
+                "clip": last_clip
+            },
+            "class_type": "LoraLoader",
+            "_meta": {"title": f"Dynamic_Lora_{idx}"}
+        }
+        last_model = [node_id, 0]
+        last_clip = [node_id, 1]
+        
+    # 把 LoRA 终点强行塞入到主干网的入口
+    if "22" in prompt: prompt["22"]["inputs"]["model"] = last_model
+    if "8" in prompt: prompt["8"]["inputs"]["model"] = last_model
+    if "2" in prompt: prompt["2"]["inputs"]["clip"] = last_clip
+    if "3" in prompt: prompt["3"]["inputs"]["clip"] = last_clip
     
     # ======= 参数映射 =======
     # 正负文本 (2, 3)
