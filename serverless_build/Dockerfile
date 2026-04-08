@@ -51,8 +51,10 @@ RUN python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(rep
 RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='DIAMONIK7777/antelopev2', local_dir='insightface/models/antelopev2', local_dir_use_symlinks=False)"
 
 # 4. ControlNet & Annotators
-RUN wget -L -O controlnet/controlnet-depth-sdxl-1.0.safetensors "https://huggingface.co/diffusers/controlnet-depth-sdxl-1.0/resolve/main/diffusion_pytorch_model.safetensors" && \
-    wget -L -O controlnet/controlnet-openpose-sdxl-1.0.safetensors "https://huggingface.co/thibaud/controlnet-openpose-sdxl-1.0/resolve/main/OpenPoseXL2.safetensors"
+RUN python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='diffusers/controlnet-depth-sdxl-1.0', filename='diffusion_pytorch_model.safetensors', local_dir='controlnet')" && \
+    mv controlnet/diffusion_pytorch_model.safetensors controlnet/controlnet-depth-sdxl-1.0.safetensors && \
+    python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='thibaud/controlnet-openpose-sdxl-1.0', filename='OpenPoseXL2.safetensors', local_dir='controlnet')" && \
+    mv controlnet/OpenPoseXL2.safetensors controlnet/controlnet-openpose-sdxl-1.0.safetensors
 
 RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='yzd-v/DWPose', local_dir='../custom_nodes/comfyui_controlnet_aux/ckpts/yzd-v/DWPose', local_dir_use_symlinks=False)"
 
@@ -60,7 +62,8 @@ RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download
 RUN curl -L "https://civitai.com/api/download/models/160240?token=${CIVITAI_TOKEN}" -o loras/NSFW_POV_AllInOne.safetensors
 
 # 6. Upscaler
-RUN mkdir -p upscale_models && wget -L -O upscale_models/4x-UltraSharp.pth "https://huggingface.co/lokCX/4x-Ultrasharp/resolve/main/4x-UltraSharp.pth"
+RUN mkdir -p upscale_models && \
+    python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='lokCX/4x-Ultrasharp', filename='4x-UltraSharp.pth', local_dir='upscale_models')"
 
 # Install Serverless dependencies
 WORKDIR /
