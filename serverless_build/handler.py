@@ -225,22 +225,34 @@ def handler(job):
             if prompt_id in history:
                 break
                 
-        # 提图逻辑
+        # 提图逻辑（加入详细调试信息）
         output_images = []
         outputs = history[prompt_id]['outputs']
         
+        print(f"[DEBUG] 任务完成，outputs 包含节点: {list(outputs.keys())}")
+        
         for node_id, node_output in outputs.items():
             if 'images' in node_output:
+                print(f"[DEBUG] 节点 {node_id} 含有图片，数量: {len(node_output['images'])}")
                 for image in node_output['images']:
-                    image_data = get_image(image['filename'], image['subfolder'], image['type'])
-                    b64_img = base64.b64encode(image_data).decode('utf-8')
-                    # 我们只要最高清的最终成品流（Node 16）或者放大终点返回
-                    output_images.append(b64_img)
-                    
+                    try:
+                        image_data = get_image(image['filename'], image['subfolder'], image['type'])
+                        b64_img = base64.b64encode(image_data).decode('utf-8')
+                        output_images.append(b64_img)
+                        print(f"[DEBUG] 节点 {node_id} 图片读取成功，大小: {len(image_data)/1024:.1f} KB")
+                    except Exception as img_err:
+                        print(f"[DEBUG] 节点 {node_id} 图片读取失败: {img_err}")
+            else:
+                print(f"[DEBUG] 节点 {node_id} 无图片输出")
+                
+        if not output_images:
+            print("[DEBUG] output_images 为空！请检查上方节点信息。")
+                     
         return {"images": output_images}
         
     except Exception as e:
         return {"error": str(e)}
+
 
 # ================= 启动点 =================
 # 在启动 RunPod 监听之前，先点火 ComfyUI
