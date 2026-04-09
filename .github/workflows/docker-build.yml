@@ -9,7 +9,7 @@ on:
       image_tag:
         description: '镜像 Tag（例如：v1.0.0 或 latest）'
         required: true
-        default: 'v1.0'
+        default: 'v1.1'
 
 jobs:
   build-and-push:
@@ -34,5 +34,5 @@ jobs:
           context: ./serverless_build
           file: ./serverless_build/Dockerfile
           push: true
-          tags: lrrrrrrrr/runpod-pulid-serverless-${{ github.event.inputs.image_tag || 'v1.0' }}
+          tags: lrrrrrrrr/runpod-pulid-serverless-${{ github.event.inputs.image_tag || 'v1.1' }}
 

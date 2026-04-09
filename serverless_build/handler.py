@@ -52,60 +52,7 @@ def upload_image_to_r2(image_bytes, job_id, index, fmt="jpg"):
     print(f"[R2] 上传成功: {url}")
     return url
 
-def download_models_if_missing():
-    """方案B：解除硬盘锁区，开机冷启动自动高速下载模型到容器"""
-    print("=" * 60)
-    print("[DIAG-DOWNLOAD] 环境初始化：检查并在需要时从公网拉取基础模型...")
-    
-    # 定义必须的核心模型字典
-    TOKEN = "fd0f3beec0b56c19715e0161cca7505c"
-    model_urls = {
-        "checkpoints/SDXL_Photorealistic_Mix_nsfw.safetensors": f"https://civitai.com/api/download/models/378684?token={TOKEN}",
-        "pulid/ip-adapter_pulid_sdxl_fp16.safetensors": "https://huggingface.co/guozinan/PuLID/resolve/main/ip-adapter_pulid_sdxl_fp16.safetensors",
-        "upscale_models/4x-UltraSharp.pth": "https://huggingface.co/uwg/upscaler/resolve/main/ESRGAN/4x-UltraSharp.pth",
-        "loras/NSFW_POV_AllInOne.safetensors": f"https://civitai.com/api/download/models/609924?token={TOKEN}",
-        "controlnet/controlnet-openpose-sdxl-1.0.safetensors": "https://huggingface.co/thibaud/controlnet-openpose-sdxl-1.0/resolve/main/OpenPoseXL2.safetensors",
-        "controlnet/controlnet-depth-sdxl-1.0.safetensors": "https://huggingface.co/diffusers/controlnet-depth-sdxl-1.0/resolve/main/diffusion_pytorch_model.fp16.safetensors"
-    }
-    
-    # 强制将模型存放到 /workspace/models，脱离网络硬盘
-    base_dir = "/workspace/models"
-    os.makedirs(base_dir, exist_ok=True)
-    
-    for relative_path, url in model_urls.items():
-        target_path = os.path.join(base_dir, relative_path)
-        os.makedirs(os.path.dirname(target_path), exist_ok=True)
-        
-        # 如果文件存在且大于10MB，视为有效
-        if os.path.exists(target_path) and os.path.getsize(target_path) > 10 * 1024 * 1024:
-            print(f"[DIAG-DOWNLOAD] ✅ 模型已就绪: {relative_path}")
-            continue
-            
-        # 如果存在但是破损空文件，删掉重来
-        if os.path.exists(target_path):
-            os.remove(target_path)
-            
-        print(f"[DIAG-DOWNLOAD] 正在拉取缺失模型 (10Gbps+ 内网加速中): {relative_path}")
-        try:
-            # 优先尝试 aria2c，不支持的链接会抛异常
-            subprocess.run(
-                ["aria2c", "-x", "8", "-s", "8", "--auto-file-renaming=false", url, "-d", os.path.dirname(target_path), "-o", os.path.basename(target_path)],
-                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-            )
-        except Exception:
-            # Fallback 用强大的 curl -sL （支持各种网站重定向跳转）
-            try:
-                subprocess.run(["curl", "-sL", "-o", target_path, url], check=True)
-            except Exception as e:
-                print(f"[DIAG-DOWNLOAD] ❌ curl 彻底失败: {relative_path} ({e})")
-        
-        # 二次校验
-        if os.path.exists(target_path) and os.path.getsize(target_path) > 10 * 1024 * 1024:
-            print(f"[DIAG-DOWNLOAD] ✅ 下载成功: {relative_path}")
-        else:
-            print(f"[DIAG-DOWNLOAD] ❌ 下载未完整: {relative_path}")
-            
-    print("=" * 60)
+
 
 def check_r2_connectivity():
     print("=" * 60)
@@ -445,7 +392,6 @@ def handler(job):
 # ================= 启动点 =================
 # 先进行环境自检和模型自动寻址
 check_r2_connectivity()
-download_models_if_missing()
 auto_configure_models()
 start_comfyui()
 
