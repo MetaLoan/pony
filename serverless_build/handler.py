@@ -49,32 +49,65 @@ def upload_image_to_r2(image_bytes, job_id, index, fmt="jpg"):
     print(f"[R2] 上传成功: {url}")
     return url
 
-def diagnose_model_paths():
-    """启动时扫描并打印模型目录结构，帮助排查 Volume 挂载问题"""
-    import glob
-    scan_paths = [
-        "/runpod-volume",
-        "/runpod-volume/checkpoints",
-        "/runpod-volume/loras",
-        "/workspace/models",
-        "/workspace/ComfyUI/models",
-    ]
+def check_r2_connectivity():
     print("=" * 60)
-    print("[DIAG] 扫描模型目录...")
-    for path in scan_paths:
-        if os.path.exists(path):
-            try:
-                items = os.listdir(path)
-                print(f"[DIAG] ✅ {path}/ → {items}")
-                for item in items:
-                    sub = os.path.join(path, item)
-                    if os.path.isdir(sub):
-                        sub_items = os.listdir(sub)
-                        print(f"[DIAG]    {item}/ → {sub_items[:5]}")
-            except Exception as e:
-                print(f"[DIAG] ⚠️  {path} 无法读取: {e}")
-        else:
-            print(f"[DIAG] ❌ {path} 不存在")
+    print(f"[DIAG-R2] 开始验证 R2 读写权限... Bucket: {R2_BUCKET}")
+    masked_key = f"{R2_ACCESS_KEY[:5]}...{R2_ACCESS_KEY[-4:]}" if len(R2_ACCESS_KEY) > 10 else "EMPTY / WRONG!"
+    print(f"[DIAG-R2] 当前使用的 Access Key: {masked_key}")
+    try:
+        client = get_r2_client()
+        client.put_object(Bucket=R2_BUCKET, Key="r2_diagnostic_ping.txt", Body=b"ping", ContentType="text/plain")
+        print("[DIAG-R2] ✅ R2 连通性测试通过！具备写入权限。")
+    except Exception as e:
+        print("❌" * 30)
+        print(f"[致命错误] R2 权限验证失败: {e}")
+        print("!!! 请检查 RunPod 环境变量 (R2_ACCESS_KEY / R2_SECRET_KEY) 是否填写有误，或无 Object Write 权限 !!!")
+        print("❌" * 30)
+    print("=" * 60)
+
+def auto_configure_models():
+    """全盘自动寻址模型目录并动态生成 extra_model_paths.yaml"""
+    print("[DIAG-MODELS] 开始全盘自动寻址模型目录...")
+    
+    model_dirs = {
+        "checkpoints": ["checkpoints"],
+        "loras": ["loras"],
+        "controlnet": ["controlnet"],
+        "vae": ["vae"],
+        "clip_vision": ["clip_vision"],
+        "upscale_models": ["upscale_models"]
+    }
+    
+    # 按优先级搜索：优先看我们挂载的 volume，再看 fallback
+    search_roots = ["/runpod-volume/models", "/runpod-volume", "/workspace/models", "/workspace/ComfyUI/models"]
+    
+    found_paths = {}
+    for target_key, target_names in model_dirs.items():
+        found = False
+        for root in search_roots:
+            for name in target_names:
+                candidate = os.path.join(root, name)
+                if os.path.exists(candidate) and os.path.isdir(candidate):
+                    found_paths[target_key] = candidate
+                    print(f"[DIAG-MODELS] ✅ 找到 {target_key}: {candidate}")
+                    found = True
+                    break
+            if found: break
+        if not found:
+            print(f"[DIAG-MODELS] ⚠️  未找到 {target_key}，可能有生图失败风险")
+            
+    # 生成 extra_model_paths.yaml (基于根目录寻址，绕开必须指定固定前缀的问题)
+    yaml_content = "runpod_dynamic_mount:\n  base_path: /\n"
+    for k, v in found_paths.items():
+        yaml_content += f"  {k}: {v.lstrip('/')}\n"
+        
+    yaml_path = "/workspace/ComfyUI/extra_model_paths.yaml"
+    try:
+        with open(yaml_path, "w") as f:
+            f.write(yaml_content)
+        print(f"[DIAG-MODELS] ✅ 已根据实际寻址动态生成 {yaml_path}:\n{yaml_content}")
+    except Exception as e:
+        print(f"[DIAG-MODELS] ⚠️  生成 yaml 失败: {e}")
     print("=" * 60)
 
 def start_comfyui():
@@ -352,8 +385,9 @@ def handler(job):
 
 
 # ================= 启动点 =================
-# 先诊断模型路径，再点火 ComfyUI
-diagnose_model_paths()
+# 先进行环境自检和模型自动寻址
+check_r2_connectivity()
+auto_configure_models()
 start_comfyui()
 
 runpod.serverless.start({"handler": handler})
