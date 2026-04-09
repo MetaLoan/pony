@@ -1,0 +1,66 @@
+FROM runpod/pytorch:2.1.0-py3.10-cuda11.8.0-devel-ubuntu22.04
+
+SHELL ["/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git wget libgl1 libglib2.0-0 jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup workspace
+WORKDIR /workspace
+
+# Clone ComfyUI
+RUN git clone https://github.com/comfyanonymous/ComfyUI.git
+WORKDIR /workspace/ComfyUI
+
+# Install PyTorch and ComfyUI dependencies
+RUN pip install --no-cache-dir "numpy<2.0.0" && \
+    pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 --upgrade
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install custom nodes
+WORKDIR /workspace/ComfyUI/custom_nodes
+RUN git clone https://github.com/cubiq/PuLID_ComfyUI.git && \
+    pip install --no-cache-dir -r PuLID_ComfyUI/requirements.txt && \
+    git clone https://github.com/Fannovel16/comfyui_controlnet_aux.git && \
+    pip install --no-cache-dir -r comfyui_controlnet_aux/requirements.txt
+
+# Global dependencies
+RUN pip install --no-cache-dir insightface huggingface_hub onnxruntime-gpu facexlib
+
+# =========================================================
+# 轻量化部署：模型不进镜像，运行时从 Network Volume 挂载
+# Network Volume 挂载路径：/workspace/models
+# ComfyUI 通过 extra_model_paths.yaml 加载 Volume 上的模型
+# =========================================================
+
+# 配置 ComfyUI 额外模型路径（指向 Network Volume）
+RUN cat > /workspace/ComfyUI/extra_model_paths.yaml << 'EOF'
+network_volume:
+  base_path: /workspace/models
+  checkpoints: checkpoints
+  loras: loras
+  vae: vae
+  clip: clip_vision
+  pulid: pulid
+  controlnet: controlnet
+  upscale_models: upscale_models
+  custom_nodes: custom_nodes
+  insightface: insightface
+EOF
+
+# Install Serverless dependencies
+WORKDIR /
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy handler and workflow JSON
+COPY handler.py /handler.py
+COPY sd-2xctrlnet-facefusion-api.json /sd-2xctrlnet-facefusion-api.json
+
+# Start the RunPod serverless handler
+CMD ["python3", "-u", "/handler.py"]

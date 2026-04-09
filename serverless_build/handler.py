@@ -57,9 +57,11 @@ def start_comfyui():
         "python3", "/workspace/ComfyUI/main.py",
         "--listen", "127.0.0.1",
         "--port", "8188",
-        "--disable-auto-launch"
+        "--disable-auto-launch",
+        "--extra-model-paths-config", "/workspace/ComfyUI/extra_model_paths.yaml"
     ]
     subprocess.Popen(cmd, stdout=log_out, stderr=log_err)
+
 
 def wait_for_comfyui(timeout=180):
     """冷启动保险：在 ComfyUI 服务就绪之前阻塞，最多等 timeout 秒"""
