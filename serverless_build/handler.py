@@ -50,10 +50,11 @@ def diagnose_model_paths():
     """启动时扫描并打印模型目录结构，帮助排查 Volume 挂载问题"""
     import glob
     scan_paths = [
+        "/runpod-volume",
+        "/runpod-volume/checkpoints",
+        "/runpod-volume/loras",
         "/workspace/models",
         "/workspace/ComfyUI/models",
-        "/runpod-volume",
-        "/runpod-volume/models",
     ]
     print("=" * 60)
     print("[DIAG] 扫描模型目录...")
