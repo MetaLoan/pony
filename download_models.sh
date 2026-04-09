@@ -7,28 +7,42 @@ echo "=============================================="
 
 # ================= 自动寻址探测 =================
 TARGET_BASE=""
+
+echo "[雷达] 开始深度扫描宿主机文件树，定位 ComfyUI..."
+
 if [ -d "/runpod-volume/models" ]; then
     TARGET_BASE="/runpod-volume/models"
-    echo "[寻址] 检测到 RunPod Network Volume 环境，将装载到硬盘卷"
-elif [ -d "/workspace/ComfyUI/models" ]; then
-    TARGET_BASE="/workspace/ComfyUI/models"
-    echo "[寻址] 检测到已有的 ComfyUI 本地容器环境"
-elif [ -d "/workspace" ]; then
-    TARGET_BASE="/workspace/ComfyUI/models"
-    echo "[寻址] 检测到全新 RunPod /workspace 挂载盘，将预创建 ComfyUI 模型目录"
-    mkdir -p "$TARGET_BASE"
-elif [ -d "./models/checkpoints" ]; then
-    TARGET_BASE="./models"
-    echo "[寻址] 检测到本地 ComfyUI 根目录，将安装到 ./models"
-elif [ -d "../models/checkpoints" ]; then
-    TARGET_BASE="../models"
-    echo "[寻址] 检测到脚本正位于 custom_nodes 目录"
+    echo "[寻址] 检测到挂载的网络硬盘卷: ${TARGET_BASE}"
 else
-    # 彻底找不到，就直接在脚本当前目录下新建一个独立文件夹
-    TARGET_BASE="./ComfyUI_Models"
-    echo "[寻址] ⚠️ 未检测到 ComfyUI 目录结构，将在当前位置创建一个独立库!"
-    echo "[寻址] 路径: $(pwd)/ComfyUI_Models"
-    mkdir -p "${TARGET_BASE}"
+    # 在 /workspace 目录下进行深度寻址找存不存在 models/checkpoints
+    # 用 head -n 1 找到第一个看起来像 ComfyUI 根 models 的目录
+    if [ -d "/workspace" ]; then
+        FOUND_MODELS=$(find /workspace -type d -name "checkpoints" -path "*/models/checkpoints" -not -path "*/.Trash-*" 2>/dev/null | head -n 1)
+        if [ -n "$FOUND_MODELS" ]; then
+            TARGET_BASE=$(dirname "$FOUND_MODELS")
+            echo "[寻址] 深度探测成功！找到目标目录: ${TARGET_BASE}"
+        fi
+    fi
+    
+    # 彻底没找到的话：如果位于本地 ./models
+    if [ -z "$TARGET_BASE" ]; then
+        if [ -d "./models/checkpoints" ]; then
+            TARGET_BASE="./models"
+            echo "[寻址] 探测为 ComfyUI 根目录启动: ./models"
+        elif [ -d "../models/checkpoints" ]; then
+            TARGET_BASE="../models"
+            echo "[寻址] 探测为 custom_nodes 目录启动: ../models"
+        elif [ -d "/workspace" ]; then
+            # 如果是白板新机器，连ComfyUI还没装
+            TARGET_BASE="/workspace/ComfyUI/models"
+            echo "[寻址] 全新 /workspace 白板环境，缺省指向: ${TARGET_BASE}"
+            mkdir -p "$TARGET_BASE"
+        else
+            TARGET_BASE="./ComfyUI_Models"
+            echo "[寻址] ⚠️ 完全未知环境，强制生成基准目录: $(pwd)/ComfyUI_Models"
+            mkdir -p "$TARGET_BASE"
+        fi
+    fi
 fi
 
 echo "=============================================="
