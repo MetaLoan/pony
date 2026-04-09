@@ -8,10 +8,43 @@ import time
 import os
 import subprocess
 import io
+import boto3
+from botocore.config import Config
 from PIL import Image
 
 COMFY_HOST = "127.0.0.1:8188"
 JSON_WORKFLOW_FILE = "/sd-2xctrlnet-facefusion-api.json"
+
+# ======= R2 上传配置（从环境变量读取，RunPod 后台配置） =======
+R2_ENDPOINT    = os.environ.get("R2_ENDPOINT",    "")
+R2_ACCESS_KEY  = os.environ.get("R2_ACCESS_KEY",  "")
+R2_SECRET_KEY  = os.environ.get("R2_SECRET_KEY",  "")
+R2_BUCKET      = os.environ.get("R2_BUCKET",      "candyhub-s")
+R2_PUBLIC_URL  = os.environ.get("R2_PUBLIC_URL",  "https://vcdn.sprize.ai")
+
+def get_r2_client():
+    return boto3.client(
+        "s3",
+        endpoint_url=R2_ENDPOINT,
+        aws_access_key_id=R2_ACCESS_KEY,
+        aws_secret_access_key=R2_SECRET_KEY,
+        config=Config(signature_version="s3v4"),
+        region_name="auto"
+    )
+
+def upload_image_to_r2(image_bytes, job_id, index, fmt="jpg"):
+    """将图片字节流上传到 R2，返回公共 CDN URL"""
+    key = f"r/{job_id}_{index}.{fmt}"
+    client = get_r2_client()
+    client.put_object(
+        Bucket=R2_BUCKET,
+        Key=key,
+        Body=image_bytes,
+        ContentType=f"image/{fmt}"
+    )
+    url = f"{R2_PUBLIC_URL.rstrip('/')}/{key}"
+    print(f"[R2] 上传成功: {url}")
+    return url
 
 def start_comfyui():
     """点火：在后台启动真正的 ComfyUI 引擎"""
@@ -82,6 +115,7 @@ def save_b64_image(b64_str, temp_filename):
 def handler(job):
     wait_for_comfyui()   # 🔒 冷启动保险，确保 ComfyUI 内核已完全就绪
     job_input = job.get('input', {})
+    job_id = job.get('id', 'unknown')   # RunPod 任务 ID，用于 R2 文件命名
     
     # 动态参数映射表
     b64_ref = job_input.get("reference_image")
@@ -227,35 +261,40 @@ def handler(job):
             if prompt_id in history:
                 break
                 
-        # 提图逻辑（加入详细调试信息）
-        output_images = []
+        # 提图 + 上传 R2
+        output_urls = []
         outputs = history[prompt_id]['outputs']
+        # job_id 已在 handler 入口获取，此处直接使用
         
         print(f"[DEBUG] 任务完成，outputs 包含节点: {list(outputs.keys())}")
         
+        img_index = 0
         for node_id, node_output in outputs.items():
             if 'images' in node_output:
                 print(f"[DEBUG] 节点 {node_id} 含有图片，数量: {len(node_output['images'])}")
                 for image in node_output['images']:
                     try:
                         image_data = get_image(image['filename'], image['subfolder'], image['type'])
-                        # 用 PIL 压缩为 JPEG 避免 RunPod payload 超限
+                        # 压缩为 JPEG
                         pil_img = Image.open(io.BytesIO(image_data)).convert("RGB")
                         buf = io.BytesIO()
                         pil_img.save(buf, format="JPEG", quality=85, optimize=True)
-                        buf.seek(0)
-                        b64_img = base64.b64encode(buf.read()).decode('utf-8')
-                        output_images.append(b64_img)
-                        print(f"[DEBUG] 节点 {node_id} 压缩后大小: {buf.tell()/1024:.1f} KB")
+                        jpeg_bytes = buf.getvalue()
+                        print(f"[DEBUG] 节点 {node_id} 压缩后大小: {len(jpeg_bytes)/1024:.1f} KB")
+                        
+                        # 上传到 R2
+                        url = upload_image_to_r2(jpeg_bytes, job_id, img_index, fmt="jpg")
+                        output_urls.append(url)
+                        img_index += 1
                     except Exception as img_err:
                         print(f"[DEBUG] 节点 {node_id} 图片处理失败: {img_err}")
             else:
                 print(f"[DEBUG] 节点 {node_id} 无图片输出")
                 
-        if not output_images:
-            print("[DEBUG] output_images 为空！请检查上方节点信息。")
+        if not output_urls:
+            print("[DEBUG] output_urls 为空！请检查上方节点信息。")
                      
-        return {"images": output_images}
+        return {"urls": output_urls}
         
     except Exception as e:
         return {"error": str(e)}

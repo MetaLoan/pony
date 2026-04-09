@@ -57,7 +57,7 @@ print(f"✅ 任务下发成功! 任务ID: {job_id}\n")
 
 print("3. 后台大模型开始运转（正在进行冷启动或队列运算），正在监听状态...")
 start_time = time.time()
-output_url = f"https://api.runpod.ai/v2/{ENDPOINT_ID}/output/{job_id}"
+output_url_endpoint = f"https://api.runpod.ai/v2/{ENDPOINT_ID}/output/{job_id}"
 
 while True:
     try:
@@ -68,37 +68,37 @@ while True:
         print(f"   [状态获取] 当前任务进度: {status}...")
         
         if status == "COMPLETED":
-            # 分开拉取 output（RunPod 对大 payload 推荐用 /output 端点）
-            print("   [取图] 正在从 output 端点拉取结果...")
+            print("   [取图] 正在从 output 端点获取结果 URL...")
             for attempt in range(10):
                 try:
-                    out_resp = requests.get(output_url, headers=headers, timeout=180)
+                    out_resp = requests.get(output_url_endpoint, headers=headers, timeout=60)
                     out_data = out_resp.json()
-                    print(f"   [取图] output 响应 keys: {list(out_data.keys()) if isinstance(out_data, dict) else type(out_data)}")
+                    print(f"   [取图] output 响应: {str(out_data)[:300]}")
                     
-                    # 兼容两种响应格式
+                    # 解析 URL 列表
+                    urls = []
                     if isinstance(out_data, dict):
-                        img_list = out_data.get("images") or (out_data.get("output") or {}).get("images", [])
-                    elif isinstance(out_data, list):
-                        img_list = out_data
-                    else:
-                        img_list = []
+                        urls = out_data.get("urls") or out_data.get("output", {}).get("urls", [])
                     
-                    if img_list:
-                        with open("v1_output_result.jpg", "wb") as f:
-                            f.write(base64.b64decode(img_list[0]))
+                    if urls:
+                        for i, url in enumerate(urls):
+                            print(f"   [下载图片] {url}")
+                            img_resp = requests.get(url, timeout=60)
+                            fname = f"v1_output_result_{i}.jpg" if len(urls) > 1 else "v1_output_result.jpg"
+                            with open(fname, "wb") as f:
+                                f.write(img_resp.content)
+                            print(f"   ✅ 保存为 {fname} ({len(img_resp.content)//1024} KB)")
                         elapsed = round(time.time() - start_time, 2)
                         print(f"\n🎉 爆炸级成功！耗时: {elapsed} 秒。")
-                        print(f"高清大图已经保存为 v1_output_result.jpg！")
                         break
                     else:
-                        print(f"   [大图重试 {attempt+1}/10] 图片字段为空，原始响应: {str(out_data)[:300]}")
+                        print(f"   [重试 {attempt+1}/10] URL 为空，3秒后重试...")
                         time.sleep(3)
                 except Exception as e:
-                    print(f"   [大图重试 {attempt+1}/10] 获取失败: {e}")
+                    print(f"   [重试 {attempt+1}/10] 获取失败: {e}")
                     time.sleep(3)
             else:
-                print("❌ 大图获取失败，已超过最大重试次数。")
+                print("❌ 获取结果 URL 失败，已超过最大重试次数。")
             break
             
         elif status == "FAILED":
@@ -109,5 +109,6 @@ while True:
     except Exception as e:
         print(f"   网络波动，5秒后重试: {e}")
         time.sleep(5)
+
 
 

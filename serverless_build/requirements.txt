@@ -3,3 +3,4 @@ requests
 websocket-client
 aiohttp
 Pillow
+boto3
