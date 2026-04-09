@@ -28,7 +28,10 @@ def get_r2_client():
         endpoint_url=R2_ENDPOINT,
         aws_access_key_id=R2_ACCESS_KEY,
         aws_secret_access_key=R2_SECRET_KEY,
-        config=Config(signature_version="s3v4"),
+        config=Config(
+            signature_version="s3v4",
+            s3={"addressing_style": "path"}   # R2 必须用 path-style，否则 AccessDenied
+        ),
         region_name="auto"
     )
 
