@@ -30,7 +30,8 @@ WORKDIR /workspace/ComfyUI/custom_nodes
 RUN git clone https://github.com/cubiq/PuLID_ComfyUI.git && \
     pip install --no-cache-dir -r PuLID_ComfyUI/requirements.txt && \
     git clone https://github.com/Fannovel16/comfyui_controlnet_aux.git && \
-    pip install --no-cache-dir -r comfyui_controlnet_aux/requirements.txt
+    pip install --no-cache-dir -r comfyui_controlnet_aux/requirements.txt && \
+    git clone https://github.com/joxiong/ComfyUI-tbox.git
 
 # Install python dependencies for nodes (Global fallback)
 RUN pip install --no-cache-dir insightface huggingface_hub onnxruntime-gpu facexlib
