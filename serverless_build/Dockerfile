@@ -57,7 +57,14 @@ RUN python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(rep
     python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='thibaud/controlnet-openpose-sdxl-1.0', filename='OpenPoseXL2.safetensors', local_dir='controlnet')" && \
     mv controlnet/OpenPoseXL2.safetensors controlnet/controlnet-openpose-sdxl-1.0.safetensors
 
-RUN python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='yzd-v/DWPose', local_dir='../custom_nodes/comfyui_controlnet_aux/ckpts/yzd-v/DWPose', local_dir_use_symlinks=False)"
+RUN python3 -c "\
+from huggingface_hub import hf_hub_download; \
+import os; \
+target_dir = '../custom_nodes/comfyui_controlnet_aux/ckpts/yzd-v/DWPose'; \
+os.makedirs(target_dir, exist_ok=True); \
+hf_hub_download(repo_id='yzd-v/DWPose', filename='yolox_l.onnx', local_dir=target_dir); \
+hf_hub_download(repo_id='yzd-v/DWPose', filename='dw-ll_ucoco_384.onnx', local_dir=target_dir); \
+print('DWPose files downloaded successfully')"
 
 # 5. LoRA
 RUN curl -L "https://civitai.com/api/download/models/160240?token=${CIVITAI_TOKEN}" -o loras/NSFW_POV_AllInOne.safetensors
