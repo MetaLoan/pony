@@ -84,18 +84,18 @@ download_model() {
     fi
 }
 
-# ================= 开始下载大模型与全部周边依赖 =================
+# ================= 开始下载 V16 原版所有大模型与组件 =================
 
-echo -e "\n[模块 1] 核心基础大模型"
-download_model "checkpoints" "RealVisXL_V4.safetensors" "https://huggingface.co/SG161222/RealVisXL_V4.0/resolve/main/RealVisXL_V4.0.safetensors"
+echo -e "\n[模块 1] SDXL 基础写实大模型 (V16原版)"
+download_model "checkpoints" "SDXL_Photorealistic_Mix_nsfw.safetensors" "https://civitai.com/api/download/models/544282?token=${CIVITAI_TOKEN}"
 
 echo -e "\n[模块 2] PuLID 面部特征提取"
-download_model "pulid" "ip-adapter_pulid_sdxl_fp16.safetensors" "https://huggingface.co/guozinan/PuLID/resolve/main/ip-adapter_pulid_sdxl_fp16.safetensors"
+download_model "pulid" "ip-adapter_pulid_sdxl_fp16.safetensors" "https://huggingface.co/huchenlei/ipadapter_pulid/resolve/main/ip-adapter_pulid_sdxl_fp16.safetensors"
 
 echo -e "\n[模块 3] EVA-CLIP Vision 模型 (PuLID必需)"
 download_model "clip_vision" "EVA02_CLIP_L_336_psz14_s6B.pt" "https://huggingface.co/QuanSun/EVA-CLIP/resolve/main/EVA02_CLIP_L_336_psz14_s6B.pt"
 
-echo -e "\n[模块 4] Insightface (AntelopeV2, PuLID和FaceID必需)"
+echo -e "\n[模块 4] Insightface (AntelopeV2, PuLID必需)"
 download_model "insightface/models/antelopev2" "1k3d68.onnx" "https://huggingface.co/DIAMONIK7777/antelopev2/resolve/main/1k3d68.onnx"
 download_model "insightface/models/antelopev2" "2d106det.onnx" "https://huggingface.co/DIAMONIK7777/antelopev2/resolve/main/2d106det.onnx"
 download_model "insightface/models/antelopev2" "genderage.onnx" "https://huggingface.co/DIAMONIK7777/antelopev2/resolve/main/genderage.onnx"
@@ -103,26 +103,24 @@ download_model "insightface/models/antelopev2" "glintr100.onnx" "https://hugging
 download_model "insightface/models/antelopev2" "scrfd_10g_bnkps.onnx" "https://huggingface.co/DIAMONIK7777/antelopev2/resolve/main/scrfd_10g_bnkps.onnx"
 
 echo -e "\n[模块 5] ControlNet 大模型"
-download_model "controlnet" "controlnet-depth-sdxl-1.0.safetensors" "https://huggingface.co/diffusers/controlnet-depth-sdxl-1.0/resolve/main/diffusion_pytorch_model.fp16.safetensors"
-download_model "controlnet" "controlnet-openpose-sdxl-1.0.safetensors" "https://huggingface.co/thibaud/controlnet-openpose-sdxl-1.0/resolve/main/OpenPoseXL2.safetensors"
+download_model "controlnet" "controlnet-depth-sdxl-1.0.safetensors" "https://huggingface.co/diffusers/controlnet-depth-sdxl-1.0/resolve/main/diffusion_pytorch_model.safetensors"
+download_model "controlnet" "controlnet-openpose-sdxl-1.0.safetensors" "https://huggingface.co/thibaud/controlnet-openpose-sdxl-1.0/resolve/main/controlnet-openpose-sdxl-1.0.safetensors"
 
 echo -e "\n[模块 6] ControlNet-Aux 预处理器底层文件"
-# 强制放到上一级的 custom_nodes 里，或者放 models 如果插件做了动态链接
-# 但为了兼容性，如果能在 ../custom_nodes/comfyui_controlnet_aux 找到，就放那里
+# 兼容适配 custom_nodes 根路径检测
 AUX_PATH="../custom_nodes/comfyui_controlnet_aux/ckpts"
 if [ ! -d "$AUX_PATH" ]; then
     AUX_PATH="checkpoints/controlnet_aux" # 防呆备胎路径
 fi
-download_model "${AUX_PATH}/lllyasviel/Annotators" "depth_anything_vitl14.pth" "https://huggingface.co/lllyasviel/Annotators/resolve/main/depth_anything_vitl14.pth"
 download_model "${AUX_PATH}/yzd-v/DWPose" "yolox_l.onnx" "https://huggingface.co/yzd-v/DWPose/resolve/main/yolox_l.onnx"
 download_model "${AUX_PATH}/yzd-v/DWPose" "dw-ll_ucoco_384.onnx" "https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.onnx"
 
 echo -e "\n[模块 7] ESRGAN 超清算法"
-download_model "upscale_models" "4x-UltraSharp.pth" "https://huggingface.co/uwg/upscaler/resolve/main/ESRGAN/4x-UltraSharp.pth"
+download_model "upscale_models" "4x-UltraSharp.pth" "https://huggingface.co/lokCX/4x-Ultrasharp/resolve/main/4x-UltraSharp.pth"
 
-echo -e "\n[模块 8] 工作流依赖 LoRA"
-download_model "loras" "NSFW_XL.safetensors" "https://civitai.com/api/download/models/160240?token=${CIVITAI_TOKEN}"
+echo -e "\n[模块 8] 工作流依赖 LoRA (NSFW POV AllInOne)"
+download_model "loras" "NSFW_POV_AllInOne.safetensors" "https://civitai.com/api/download/models/160240?token=${CIVITAI_TOKEN}"
 
 echo "=============================================="
-echo "🎉 真·工作流全套模型与组件下载完毕！"
+echo "🎉 V16 原版模型与组件下载完毕！"
 echo "=============================================="
