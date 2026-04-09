@@ -6,7 +6,7 @@ import os
 
 # ================= 配置区 =================
 API_KEY = os.environ.get("RUNPOD_API_KEY", "")
-ENDPOINT_ID = "etsp0v5are7idp"
+ENDPOINT_ID = "bsum8huofvxy6y"
 URL = f"https://api.runpod.ai/v2/{ENDPOINT_ID}/run"
 
 REFERENCE_IMAGE_PATH = "/Users/leo/Desktop/01442-832x1216_Test_pyro_poly_05_DPM++ 2M SDE Heun Exponential_1139559071.png"
@@ -72,13 +72,19 @@ while True:
             for attempt in range(10):
                 try:
                     out_resp = requests.get(output_url_endpoint, headers=headers, timeout=60)
-                    out_data = out_resp.json()
+                    raw = out_resp.text
+                    try:
+                        out_data = out_resp.json()
+                    except Exception:
+                        print(f"   [取图] 非JSON响应: {raw[:400]}")
+                        out_data = {}
                     print(f"   [取图] output 响应: {str(out_data)[:300]}")
                     
                     # 解析 URL 列表
                     urls = []
                     if isinstance(out_data, dict):
-                        urls = out_data.get("urls") or out_data.get("output", {}).get("urls", [])
+                        urls = (out_data.get("urls") or 
+                                out_data.get("output", {}).get("urls") or [])
                     
                     if urls:
                         for i, url in enumerate(urls):
