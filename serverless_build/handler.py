@@ -49,7 +49,13 @@ def upload_image_to_r2(image_bytes, job_id, index, fmt="jpg"):
 def start_comfyui():
     """点火：在后台启动真正的 ComfyUI 引擎"""
     print("🚀 正在后台启动 ComfyUI 核心进程...")
-    # 我们将 stdout/stderr 写入文件以便调试，避免阻塞主进程
+    
+    # 先建立 Network Volume 的 symlinks（pulid/insightface/DWPose）
+    if os.path.exists("/workspace/setup_volume_links.sh"):
+        print("🔗 建立 Volume symlinks...")
+        subprocess.run(["/bin/bash", "/workspace/setup_volume_links.sh"], check=False)
+    
+    # 将 stdout/stderr 写入文件以便调试
     log_out = open("/workspace/comfy_stdout.log", "w")
     log_err = open("/workspace/comfy_stderr.log", "w")
     
@@ -61,6 +67,7 @@ def start_comfyui():
         "--extra-model-paths-config", "/workspace/ComfyUI/extra_model_paths.yaml"
     ]
     subprocess.Popen(cmd, stdout=log_out, stderr=log_err)
+
 
 
 def wait_for_comfyui(timeout=180):
@@ -77,6 +84,14 @@ def wait_for_comfyui(timeout=180):
         except Exception:
             pass
         time.sleep(2)
+    # 超时：把 ComfyUI 的错误日志打出来方便调试
+    try:
+        with open("/workspace/comfy_stderr.log", "r") as f:
+            print("[ComfyUI STDERR]\n" + f.read()[-3000:])
+        with open("/workspace/comfy_stdout.log", "r") as f:
+            print("[ComfyUI STDOUT]\n" + f.read()[-2000:])
+    except Exception as log_err:
+        print(f"[无法读取 ComfyUI 日志: {log_err}]")
     raise RuntimeError("❌ ComfyUI 在超时时间内没有启动！")
 
 def get_base_workflow():

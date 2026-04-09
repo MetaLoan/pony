@@ -38,20 +38,44 @@ RUN pip install --no-cache-dir insightface huggingface_hub onnxruntime-gpu facex
 # ComfyUI 通过 extra_model_paths.yaml 加载 Volume 上的模型
 # =========================================================
 
-# 配置 ComfyUI 额外模型路径（指向 Network Volume）
+# 配置 ComfyUI 额外模型路径（只有标准 ComfyUI 目录类型才有效）
 RUN cat > /workspace/ComfyUI/extra_model_paths.yaml << 'EOF'
 network_volume:
   base_path: /workspace/models
   checkpoints: checkpoints
   loras: loras
   vae: vae
-  clip: clip_vision
-  pulid: pulid
+  clip_vision: clip_vision
   controlnet: controlnet
   upscale_models: upscale_models
-  custom_nodes: custom_nodes
-  insightface: insightface
 EOF
+
+# 创建启动前置脚本：建立 pulid/insightface/DWPose 的软链接
+# （这些路径 ComfyUI 不能通过 yaml 配置，需要 symlink 到标准位置）
+RUN cat > /workspace/setup_volume_links.sh << 'EOF'
+#!/bin/bash
+# 将 Network Volume 上的模型 symlink 到 ComfyUI 期望的路径
+MODELS=/workspace/models
+COMFY=/workspace/ComfyUI
+
+# PuLID: ComfyUI 插件从 models/pulid 中读取
+mkdir -p $COMFY/models/pulid
+[ -d $MODELS/pulid ] && ln -sf $MODELS/pulid/* $COMFY/models/pulid/ 2>/dev/null || true
+
+# InsightFace Antelopev2
+mkdir -p $COMFY/models/insightface/models
+[ -d $MODELS/insightface/models/antelopev2 ] && \
+  ln -sf $MODELS/insightface/models/antelopev2 $COMFY/models/insightface/models/antelopev2 2>/dev/null || true
+
+# DWPose: comfyui_controlnet_aux 从插件内的 ckpts 目录读取
+DWPOSE_DST=$COMFY/custom_nodes/comfyui_controlnet_aux/ckpts/yzd-v/DWPose
+DWPOSE_SRC=$MODELS/custom_nodes/comfyui_controlnet_aux/ckpts/yzd-v/DWPose
+mkdir -p $(dirname $DWPOSE_DST)
+[ -d $DWPOSE_SRC ] && ln -sfn $DWPOSE_SRC $DWPOSE_DST 2>/dev/null || true
+
+echo "✅ Volume symlinks 已建立"
+EOF
+RUN chmod +x /workspace/setup_volume_links.sh
 
 # Install Serverless dependencies
 WORKDIR /
