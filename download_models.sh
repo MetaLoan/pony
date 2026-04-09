@@ -84,29 +84,45 @@ download_model() {
     fi
 }
 
-# ================= 开始下载核心七大模块 =================
+# ================= 开始下载大模型与全部周边依赖 =================
 
-echo -e "\n[模块 1/7] SDXL 基础写实大模型"
-download_model "checkpoints" "SDXL_Photorealistic_Mix_nsfw.safetensors" "https://civitai.com/api/download/models/378684?token=${CIVITAI_TOKEN}"
+echo -e "\n[模块 1] 核心基础大模型"
+download_model "checkpoints" "RealVisXL_V4.safetensors" "https://huggingface.co/SG161222/RealVisXL_V4.0/resolve/main/RealVisXL_V4.0.safetensors"
 
-echo -e "\n[模块 2/7] PuLID 面部一致性核心模型"
+echo -e "\n[模块 2] PuLID 面部特征提取"
 download_model "pulid" "ip-adapter_pulid_sdxl_fp16.safetensors" "https://huggingface.co/guozinan/PuLID/resolve/main/ip-adapter_pulid_sdxl_fp16.safetensors"
 
-echo -e "\n[模块 3/7] ESRGAN 4x 超清放大算法"
-download_model "upscale_models" "4x-UltraSharp.pth" "https://huggingface.co/uwg/upscaler/resolve/main/ESRGAN/4x-UltraSharp.pth"
+echo -e "\n[模块 3] EVA-CLIP Vision 模型 (PuLID必需)"
+download_model "clip_vision" "EVA02_CLIP_L_336_psz14_s6B.pt" "https://huggingface.co/QuanSun/EVA-CLIP/resolve/main/EVA02_CLIP_L_336_psz14_s6B.pt"
 
-echo -e "\n[模块 4/7] NSFW 第一人称视角 LoRA"
-download_model "loras" "NSFW_POV_AllInOne.safetensors" "https://civitai.com/api/download/models/609924?token=${CIVITAI_TOKEN}"
+echo -e "\n[模块 4] Insightface (AntelopeV2, PuLID和FaceID必需)"
+download_model "insightface/models/antelopev2" "1k3d68.onnx" "https://huggingface.co/DIAMONIK7777/antelopev2/resolve/main/1k3d68.onnx"
+download_model "insightface/models/antelopev2" "2d106det.onnx" "https://huggingface.co/DIAMONIK7777/antelopev2/resolve/main/2d106det.onnx"
+download_model "insightface/models/antelopev2" "genderage.onnx" "https://huggingface.co/DIAMONIK7777/antelopev2/resolve/main/genderage.onnx"
+download_model "insightface/models/antelopev2" "glintr100.onnx" "https://huggingface.co/DIAMONIK7777/antelopev2/resolve/main/glintr100.onnx"
+download_model "insightface/models/antelopev2" "scrfd_10g_bnkps.onnx" "https://huggingface.co/DIAMONIK7777/antelopev2/resolve/main/scrfd_10g_bnkps.onnx"
 
-echo -e "\n[模块 5/7] 绝美面部优化 LoRA"
-download_model "loras" "Beautiful_face_alpha1.0.safetensors" "https://civitai.com/api/download/models/518458?token=${CIVITAI_TOKEN}"
-
-echo -e "\n[模块 6/7] ControlNet - 深度图控制 (Depth)"
+echo -e "\n[模块 5] ControlNet 大模型"
 download_model "controlnet" "controlnet-depth-sdxl-1.0.safetensors" "https://huggingface.co/diffusers/controlnet-depth-sdxl-1.0/resolve/main/diffusion_pytorch_model.fp16.safetensors"
-
-echo -e "\n[模块 7/7] ControlNet - 骨骼控制 (OpenPose)"
 download_model "controlnet" "controlnet-openpose-sdxl-1.0.safetensors" "https://huggingface.co/thibaud/controlnet-openpose-sdxl-1.0/resolve/main/OpenPoseXL2.safetensors"
 
+echo -e "\n[模块 6] ControlNet-Aux 预处理器底层文件"
+# 强制放到上一级的 custom_nodes 里，或者放 models 如果插件做了动态链接
+# 但为了兼容性，如果能在 ../custom_nodes/comfyui_controlnet_aux 找到，就放那里
+AUX_PATH="../custom_nodes/comfyui_controlnet_aux/ckpts"
+if [ ! -d "$AUX_PATH" ]; then
+    AUX_PATH="checkpoints/controlnet_aux" # 防呆备胎路径
+fi
+download_model "${AUX_PATH}/lllyasviel/Annotators" "depth_anything_vitl14.pth" "https://huggingface.co/lllyasviel/Annotators/resolve/main/depth_anything_vitl14.pth"
+download_model "${AUX_PATH}/yzd-v/DWPose" "yolox_l.onnx" "https://huggingface.co/yzd-v/DWPose/resolve/main/yolox_l.onnx"
+download_model "${AUX_PATH}/yzd-v/DWPose" "dw-ll_ucoco_384.onnx" "https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.onnx"
+
+echo -e "\n[模块 7] ESRGAN 超清算法"
+download_model "upscale_models" "4x-UltraSharp.pth" "https://huggingface.co/uwg/upscaler/resolve/main/ESRGAN/4x-UltraSharp.pth"
+
+echo -e "\n[模块 8] 工作流依赖 LoRA"
+download_model "loras" "NSFW_XL.safetensors" "https://civitai.com/api/download/models/160240?token=${CIVITAI_TOKEN}"
+
 echo "=============================================="
-echo "🎉 自动寻址与核心模型部署闭环达成！"
+echo "🎉 真·工作流全套模型与组件下载完毕！"
 echo "=============================================="
