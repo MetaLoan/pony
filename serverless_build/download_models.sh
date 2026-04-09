@@ -2,13 +2,13 @@
 # ==========================================================
 # PuLID SDXL 模型一键下载脚本
 # 用于 RunPod Network Volume 初始化
-# 挂载路径：/workspace/models
+# Volume 挂载路径：/runpod-volume（RunPod 固定路径）
 # ==========================================================
 
 set -e
 
 CIVITAI_TOKEN="fd0f3beec0b56c19715e0161cca7505c"
-BASE="/workspace/models"
+BASE="/runpod-volume"
 
 echo "🚀 开始下载所有模型到 Network Volume..."
 

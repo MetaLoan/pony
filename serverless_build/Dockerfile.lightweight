@@ -41,7 +41,7 @@ RUN pip install --no-cache-dir insightface huggingface_hub onnxruntime-gpu facex
 # 配置 ComfyUI 额外模型路径（只有标准 ComfyUI 目录类型才有效）
 RUN cat > /workspace/ComfyUI/extra_model_paths.yaml << 'EOF'
 network_volume:
-  base_path: /runpod-volume
+  base_path: /runpod-volume/models
   checkpoints: checkpoints
   loras: loras
   vae: vae
@@ -55,7 +55,7 @@ EOF
 RUN cat > /workspace/setup_volume_links.sh << 'EOF'
 #!/bin/bash
 # 将 Network Volume 上的模型 symlink 到 ComfyUI 期望的路径
-MODELS=/runpod-volume
+MODELS=/runpod-volume/models
 COMFY=/workspace/ComfyUI
 
 # PuLID: ComfyUI 插件从 models/pulid 中读取
