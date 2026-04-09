@@ -1,12 +1,15 @@
 name: Build and Push Serverless Worker
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       image_tag:
         description: '镜像 Tag（例如：v1.0.0 或 latest）'
         required: true
-        default: 'latest'
+        default: 'v0.1'
 
 jobs:
   build-and-push:
@@ -31,4 +34,5 @@ jobs:
           context: ./serverless_build
           file: ./serverless_build/Dockerfile.lightweight
           push: true
-          tags: lrrrrrrrr/runpod-pulid-serverless-${{ github.event.inputs.image_tag }}
+          tags: lrrrrrrrr/runpod-pulid-serverless-${{ github.event.inputs.image_tag || 'v0.1' }}
+
