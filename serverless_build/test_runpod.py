@@ -68,44 +68,30 @@ while True:
         print(f"   [状态获取] 当前任务进度: {status}...")
         
         if status == "COMPLETED":
-            print("   [取图] 正在从 output 端点获取结果 URL...")
-            for attempt in range(10):
-                try:
-                    out_resp = requests.get(output_url_endpoint, headers=headers, timeout=60)
-                    raw = out_resp.text
-                    try:
-                        out_data = out_resp.json()
-                    except Exception:
-                        print(f"   [取图] 非JSON响应: {raw[:400]}")
-                        out_data = {}
-                    print(f"   [取图] output 响应: {str(out_data)[:300]}")
-                    
-                    # 解析 URL 列表
-                    urls = []
-                    if isinstance(out_data, dict):
-                        urls = (out_data.get("urls") or 
-                                out_data.get("output", {}).get("urls") or [])
-                    
-                    if urls:
-                        for i, url in enumerate(urls):
-                            print(f"   [下载图片] {url}")
-                            img_resp = requests.get(url, timeout=60)
-                            fname = f"v1_output_result_{i}.jpg" if len(urls) > 1 else "v1_output_result.jpg"
-                            with open(fname, "wb") as f:
-                                f.write(img_resp.content)
-                            print(f"   ✅ 保存为 {fname} ({len(img_resp.content)//1024} KB)")
-                        elapsed = round(time.time() - start_time, 2)
-                        print(f"\n🎉 爆炸级成功！耗时: {elapsed} 秒。")
-                        break
-                    else:
-                        print(f"   [重试 {attempt+1}/10] URL 为空，3秒后重试...")
-                        time.sleep(3)
-                except Exception as e:
-                    print(f"   [重试 {attempt+1}/10] 获取失败: {e}")
-                    time.sleep(3)
+            print(f"   [取图] 任务完成，从 status 响应中提取 URL...")
+            output = poll_data.get("output", {}) or {}
+            print(f"   [取图] output 内容: {str(output)[:300]}")
+            
+            urls = []
+            if isinstance(output, dict):
+                urls = output.get("urls", [])
+            elif isinstance(output, list):
+                urls = output
+            
+            if urls:
+                for i, url in enumerate(urls):
+                    print(f"   [下载图片] {url}")
+                    img_resp = requests.get(url, timeout=60)
+                    fname = f"v1_output_result_{i}.jpg" if len(urls) > 1 else "v1_output_result.jpg"
+                    with open(fname, "wb") as f:
+                        f.write(img_resp.content)
+                    print(f"   ✅ 保存为 {fname} ({len(img_resp.content)//1024} KB)")
+                elapsed = round(time.time() - start_time, 2)
+                print(f"\n🎉 爆炸级成功！耗时: {elapsed} 秒。")
             else:
-                print("❌ 获取结果 URL 失败，已超过最大重试次数。")
+                print(f"❌ output 中没有 URLs，完整响应: {json.dumps(poll_data, indent=2)}")
             break
+
             
         elif status == "FAILED":
             print(f"\n❌ 模型后台运算崩溃:\n{json.dumps(poll_data, indent=2)}")
