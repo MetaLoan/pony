@@ -345,12 +345,27 @@ def handler(job):
             time.sleep(2)
             history = get_history(prompt_id)
             if prompt_id in history:
+                prompt_history = history[prompt_id]
                 break
+                
+        # 捕捉 ComfyUI 内部节点报错拦截
+        if 'status' in prompt_history and prompt_history['status'].get('status_str') == 'error':
+            error_msgs = str(prompt_history['status'].get('messages', []))
+            print(f"[DEBUG] ComfyUI 内部执行彻底失败: {error_msgs}")
+            
+            err_log_content = "无法读取日志"
+            try:
+                with open("/workspace/comfy_stderr.log", "r") as f:
+                    err_log_content = f.read()[-2000:]
+            except Exception:
+                pass
+                
+            return {"urls": [], "errors": [f"节点执行中断: {error_msgs}", f"ComfyUI Core 崩溃日志: {err_log_content}"]}
                 
         # 提图 + 上传 R2
         output_urls = []
         errors = []
-        outputs = history[prompt_id]['outputs']
+        outputs = prompt_history['outputs']
         # job_id 已在 handler 入口获取，此处直接使用
         
         print(f"[DEBUG] 任务完成，outputs 包含节点: {list(outputs.keys())}")
