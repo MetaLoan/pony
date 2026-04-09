@@ -74,26 +74,37 @@ def download_models_if_missing():
     
     for relative_path, url in model_urls.items():
         target_path = os.path.join(base_dir, relative_path)
-        if not os.path.exists(target_path):
-            os.makedirs(os.path.dirname(target_path), exist_ok=True)
-            print(f"[DIAG-DOWNLOAD] 正在拉取缺失的跨洋模型 (10Gbps+ 内网加速中): {relative_path}")
-            try:
-                # 尝试用 aria2c 多线程下载 (极大加速)
-                subprocess.run(
-                    ["aria2c", "-x", "8", "-s", "8", url, "-d", os.path.dirname(target_path), "-o", os.path.basename(target_path)],
-                    check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                )
-            except Exception:
-                # Fallback 用 wget
-                try:
-                    subprocess.run(["wget", "-q", url, "-O", target_path], check=True)
-                except Exception as e:
-                    print(f"[DIAG-DOWNLOAD] ❌ 下载失败: {relative_path} ({e})")
-            
-            if os.path.exists(target_path):
-                print(f"[DIAG-DOWNLOAD] ✅ 下载完成: {relative_path}")
-        else:
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        
+        # 如果文件存在且大于10MB，视为有效
+        if os.path.exists(target_path) and os.path.getsize(target_path) > 10 * 1024 * 1024:
             print(f"[DIAG-DOWNLOAD] ✅ 模型已就绪: {relative_path}")
+            continue
+            
+        # 如果存在但是破损空文件，删掉重来
+        if os.path.exists(target_path):
+            os.remove(target_path)
+            
+        print(f"[DIAG-DOWNLOAD] 正在拉取缺失模型 (10Gbps+ 内网加速中): {relative_path}")
+        try:
+            # 优先尝试 aria2c，不支持的链接会抛异常
+            subprocess.run(
+                ["aria2c", "-x", "8", "-s", "8", "--auto-file-renaming=false", url, "-d", os.path.dirname(target_path), "-o", os.path.basename(target_path)],
+                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+        except Exception:
+            # Fallback 用强大的 curl -sL （支持各种网站重定向跳转）
+            try:
+                subprocess.run(["curl", "-sL", "-o", target_path, url], check=True)
+            except Exception as e:
+                print(f"[DIAG-DOWNLOAD] ❌ curl 彻底失败: {relative_path} ({e})")
+        
+        # 二次校验
+        if os.path.exists(target_path) and os.path.getsize(target_path) > 10 * 1024 * 1024:
+            print(f"[DIAG-DOWNLOAD] ✅ 下载成功: {relative_path}")
+        else:
+            print(f"[DIAG-DOWNLOAD] ❌ 下载未完整: {relative_path}")
+            
     print("=" * 60)
 
 def check_r2_connectivity():
