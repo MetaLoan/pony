@@ -12,7 +12,11 @@ if [ -d "/runpod-volume/models" ]; then
     echo "[寻址] 检测到 RunPod Network Volume 环境，将装载到硬盘卷"
 elif [ -d "/workspace/ComfyUI/models" ]; then
     TARGET_BASE="/workspace/ComfyUI/models"
-    echo "[寻址] 检测到 RunPod 本地容器环境"
+    echo "[寻址] 检测到已有的 ComfyUI 本地容器环境"
+elif [ -d "/workspace" ]; then
+    TARGET_BASE="/workspace/ComfyUI/models"
+    echo "[寻址] 检测到全新 RunPod /workspace 挂载盘，将预创建 ComfyUI 模型目录"
+    mkdir -p "$TARGET_BASE"
 elif [ -d "./models/checkpoints" ]; then
     TARGET_BASE="./models"
     echo "[寻址] 检测到本地 ComfyUI 根目录，将安装到 ./models"
