@@ -66,8 +66,10 @@ hf_hub_download(repo_id='yzd-v/DWPose', filename='yolox_l.onnx', local_dir=targe
 hf_hub_download(repo_id='yzd-v/DWPose', filename='dw-ll_ucoco_384.onnx', local_dir=target_dir); \
 print('DWPose files downloaded successfully')"
 
-# 5. LoRA
-RUN curl -L "https://civitai.com/api/download/models/160240?token=${CIVITAI_TOKEN}" -o loras/NSFW_POV_AllInOne.safetensors
+# 5. LoRAs (3 total, all baked in)
+RUN curl -L "https://civitai.com/api/download/models/160240?token=${CIVITAI_TOKEN}" -o loras/NSFW_POV_AllInOne.safetensors && \
+    curl -L "https://civitai.com/api/download/models/278770?token=${CIVITAI_TOKEN}" -o loras/SDXL_Sevenof9_7th_NSFW.safetensors && \
+    curl -L "https://civitai.com/api/download/models/518458?token=${CIVITAI_TOKEN}" -o "loras/Beautiful_face_alpha1.0.safetensors"
 
 # 6. Upscaler
 RUN mkdir -p upscale_models && \
