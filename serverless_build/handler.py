@@ -7,6 +7,8 @@ import urllib.error
 import time
 import os
 import subprocess
+import subprocess
+import os
 import io
 import boto3
 from botocore.config import Config
@@ -14,6 +16,7 @@ from PIL import Image
 
 COMFY_HOST = "127.0.0.1:8188"
 JSON_WORKFLOW_FILE = "/sd-2xctrlnet-facefusion-api.json"
+
 
 # ======= R2 上传配置（从环境变量读取，RunPod 后台配置） =======
 R2_ENDPOINT    = os.environ.get("R2_ENDPOINT",    "")
@@ -48,6 +51,50 @@ def upload_image_to_r2(image_bytes, job_id, index, fmt="jpg"):
     url = f"{R2_PUBLIC_URL.rstrip('/')}/{key}"
     print(f"[R2] 上传成功: {url}")
     return url
+
+def download_models_if_missing():
+    """方案B：解除硬盘锁区，开机冷启动自动高速下载模型到容器"""
+    print("=" * 60)
+    print("[DIAG-DOWNLOAD] 环境初始化：检查并在需要时从公网拉取基础模型...")
+    
+    # 定义必须的核心模型字典
+    TOKEN = "fd0f3beec0b56c19715e0161cca7505c"
+    model_urls = {
+        "checkpoints/SDXL_Photorealistic_Mix_nsfw.safetensors": f"https://civitai.com/api/download/models/378684?token={TOKEN}",
+        "pulid/ip-adapter_pulid_sdxl_fp16.safetensors": "https://huggingface.co/guozinan/PuLID/resolve/main/ip-adapter_pulid_sdxl_fp16.safetensors",
+        "upscale_models/4x-UltraSharp.pth": "https://huggingface.co/uwg/upscaler/resolve/main/ESRGAN/4x-UltraSharp.pth",
+        "loras/NSFW_POV_AllInOne.safetensors": f"https://civitai.com/api/download/models/609924?token={TOKEN}",
+        "controlnet/controlnet-openpose-sdxl-1.0.safetensors": "https://huggingface.co/thibaud/controlnet-openpose-sdxl-1.0/resolve/main/OpenPoseXL2.safetensors",
+        "controlnet/controlnet-depth-sdxl-1.0.safetensors": "https://huggingface.co/diffusers/controlnet-depth-sdxl-1.0/resolve/main/diffusion_pytorch_model.fp16.safetensors"
+    }
+    
+    # 强制将模型存放到 /workspace/models，脱离网络硬盘
+    base_dir = "/workspace/models"
+    os.makedirs(base_dir, exist_ok=True)
+    
+    for relative_path, url in model_urls.items():
+        target_path = os.path.join(base_dir, relative_path)
+        if not os.path.exists(target_path):
+            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+            print(f"[DIAG-DOWNLOAD] 正在拉取缺失的跨洋模型 (10Gbps+ 内网加速中): {relative_path}")
+            try:
+                # 尝试用 aria2c 多线程下载 (极大加速)
+                subprocess.run(
+                    ["aria2c", "-x", "8", "-s", "8", url, "-d", os.path.dirname(target_path), "-o", os.path.basename(target_path)],
+                    check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                )
+            except Exception:
+                # Fallback 用 wget
+                try:
+                    subprocess.run(["wget", "-q", url, "-O", target_path], check=True)
+                except Exception as e:
+                    print(f"[DIAG-DOWNLOAD] ❌ 下载失败: {relative_path} ({e})")
+            
+            if os.path.exists(target_path):
+                print(f"[DIAG-DOWNLOAD] ✅ 下载完成: {relative_path}")
+        else:
+            print(f"[DIAG-DOWNLOAD] ✅ 模型已就绪: {relative_path}")
+    print("=" * 60)
 
 def check_r2_connectivity():
     print("=" * 60)
@@ -387,6 +434,7 @@ def handler(job):
 # ================= 启动点 =================
 # 先进行环境自检和模型自动寻址
 check_r2_connectivity()
+download_models_if_missing()
 auto_configure_models()
 start_comfyui()
 
