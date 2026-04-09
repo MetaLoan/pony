@@ -42,7 +42,7 @@ ARG CIVITAI_TOKEN="fd0f3beec0b56c19715e0161cca7505c"
 WORKDIR /workspace/ComfyUI/models
 
 # 1. SDXL Checkpoints
-RUN curl -L "https://civitai.com/api/download/models/544282?token=${CIVITAI_TOKEN}" -o checkpoints/SDXL_Photorealistic_Mix_nsfw.safetensors
+RUN curl -L "https://civitai.com/api/download/models/378684?token=${CIVITAI_TOKEN}" -o checkpoints/SDXL_Photorealistic_Mix_nsfw.safetensors
 
 # 2. PuLID Models
 RUN python3 -c "from huggingface_hub import hf_hub_download; hf_hub_download(repo_id='huchenlei/ipadapter_pulid', filename='ip-adapter_pulid_sdxl_fp16.safetensors', local_dir='pulid')" && \
@@ -67,7 +67,7 @@ hf_hub_download(repo_id='yzd-v/DWPose', filename='dw-ll_ucoco_384.onnx', local_d
 print('DWPose files downloaded successfully')"
 
 # 5. LoRAs (3 total, all baked in)
-RUN curl -L "https://civitai.com/api/download/models/160240?token=${CIVITAI_TOKEN}" -o loras/NSFW_POV_AllInOne.safetensors && \
+RUN curl -L "https://civitai.com/api/download/models/609924?token=${CIVITAI_TOKEN}" -o loras/NSFW_POV_AllInOne.safetensors && \
     curl -L "https://civitai.com/api/download/models/278770?token=${CIVITAI_TOKEN}" -o loras/SDXL_Sevenof9_7th_NSFW.safetensors && \
     curl -L "https://civitai.com/api/download/models/518458?token=${CIVITAI_TOKEN}" -o "loras/Beautiful_face_alpha1.0.safetensors"
 
