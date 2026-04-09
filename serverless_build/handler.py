@@ -311,6 +311,7 @@ def handler(job):
                 
         # 提图 + 上传 R2
         output_urls = []
+        errors = []
         outputs = history[prompt_id]['outputs']
         # job_id 已在 handler 入口获取，此处直接使用
         
@@ -335,14 +336,16 @@ def handler(job):
                         output_urls.append(url)
                         img_index += 1
                     except Exception as img_err:
-                        print(f"[DEBUG] 节点 {node_id} 图片处理失败: {img_err}")
+                        err_msg = f"节点 {node_id} 图片处理失败: {img_err}"
+                        print(f"[DEBUG] {err_msg}")
+                        errors.append(err_msg)
             else:
                 print(f"[DEBUG] 节点 {node_id} 无图片输出")
                 
         if not output_urls:
             print("[DEBUG] output_urls 为空！请检查上方节点信息。")
                      
-        return {"urls": output_urls}
+        return {"urls": output_urls, "errors": errors}
         
     except Exception as e:
         return {"error": str(e)}
