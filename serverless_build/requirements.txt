@@ -4,3 +4,4 @@ websocket-client
 aiohttp
 Pillow
 boto3
+numpy<2.0.0
